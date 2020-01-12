@@ -1,19 +1,19 @@
 import os
-from flask import Flask, render_template, send_from_directory, jsonify, abort
+from flask import Flask, render_template, send_from_directory, jsonify, abort, request
 from PIL import Image
 
 app = Flask(__name__)
 template_folder = 'azure'
 
-@app.route('/static/<path:path>')
+@app.route('/static/<path:path>', methods=['GET'])
 def static_files(path):
 	return send_from_directory('static', path)
 
-@app.route('/')
+@app.route('/', methods=['GET'])
 def index():
 	return render_template('index.html')
 
-@app.route('/templates')
+@app.route('/templates', methods=['GET'])
 def templates():
 	result = []
 	for root, dirs, files in os.walk(template_folder):
@@ -33,9 +33,14 @@ def templates():
 			result.append(item)
 	return jsonify(result)
 
-@app.route('/templates/<path:path>')
+@app.route('/templates/<path:path>', methods=['GET'])
 def template(path):
 	return send_from_directory(template_folder, path)
+
+@app.route('/deploy/<template>', methods=['POST'])
+def deploy(template):
+	content = request.get_json()
+	return "OK"
 
 if __name__ == '__main__':
 	app.run()

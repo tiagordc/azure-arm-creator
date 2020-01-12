@@ -15,4 +15,11 @@ Azure, ARM, Python, Flask, Framework7
 
 ## Configuration
 
+ * azure
+    * config.json
 
+```json
+{
+
+}
+```
