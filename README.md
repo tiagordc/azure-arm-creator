@@ -1,6 +1,6 @@
 # Azure Resource Creator
 
-Allow your users to create and manage azure resources (based on ARM templates) without any kind of cloud knowledge.
+Allow your users to create and manage azure resources (based on a set of ARM templates) without any kind of cloud knowledge.
 
 Developed with minimum possible assets to work on an iPad with Pythonista 3.
 
@@ -21,3 +21,10 @@ Developed with minimum possible assets to work on an iPad with Pythonista 3.
 
 }
 ```
+
+## Design
+
+ * app.py - Flask API
+ * \/templates\/index.html - Framework7 formatted template
+ * \/static\/app.js - Framework7 application
+ 
