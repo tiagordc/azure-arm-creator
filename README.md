@@ -10,6 +10,7 @@ Developed with minimum possible assets to work on an iPad with Pythonista 3.
     * \[Template Folder\]
         * \[Template Name\].png - 256x256 png
         * template.json - ARM template
+            * First parameter must be: "Resource_Group_Name": { "defaultValue": "", "type": "String" }
 
 ## Architecture
 
@@ -18,3 +19,6 @@ Developed with minimum possible assets to work on an iPad with Pythonista 3.
  * \/templates\/index.html - Framework7 formatted template
  * \/static\/app.js - Framework7 application
  
+ ### References
+
+[Unique Names in ARM templates]( https://www.codeisahighway.com/use-uniquestring-function-to-generate-unique-names-for-resources-in-arm-template/)

@@ -45,7 +45,7 @@ function loadTemplates(list) {
       templates.forEach(element => {
         var template = document.createElement('li');
         template.className = "arm-template";
-        template.innerHTML = '<a href="#" class="item-link"><div class="item-content"><div class="item-media"><img style="height: 32px;" src="templates/' + element.path + '/' + element.image + '"></div><div class="item-inner">' + element.name + '</div></div></a>';
+        template.innerHTML = '<a href="#" class="item-link"><div class="item-content"><div class="item-media"><img style="height: 32px;" src="template/' + element.path + '/icon"></div><div class="item-inner">' + element.name + '</div></div></a>';
         list.appendChild(template);
         template.onclick = () => {
           router.navigate({ name: 'template', params: { name: element.name, path: element.path } });
@@ -59,71 +59,68 @@ function loadTemplates(list) {
 
 function loadTemplate(path, name, content) {
   
-  var template = null;
+  var parameters = null;
 
   var req = new XMLHttpRequest();
   req.addEventListener("load", () => {
     if (req.status === 200) {
-      template = JSON.parse(req.responseText);
+      parameters = JSON.parse(req.responseText);
       var list = content.querySelector("#template-parameters");
-      for (var key in template.parameters) {
-        var parameter = template.parameters[key];
-        if (parameter.type === 'string') {
+      for (var key in parameters) {
 
-          var keyFormat = key.replace(/([A-Z])/g, ' $1').replace(/^./, function(str){ return str.toUpperCase(); });
+        var parameter = parameters[key];
+        var keyFormat = key.replace(/_/g, " ");
 
-          var parameterItem = document.createElement('li');
-          parameterItem.className = 'item-content item-input';
-          list.appendChild(parameterItem);
+        var parameterItem = document.createElement('li');
+        parameterItem.className = 'item-content item-input';
+        list.appendChild(parameterItem);
 
-          var itemInner = document.createElement('div');
-          itemInner.className = 'item-inner';
-          parameterItem.appendChild(itemInner);
+        var itemInner = document.createElement('div');
+        itemInner.className = 'item-inner';
+        parameterItem.appendChild(itemInner);
 
-          var itemTitle = document.createElement('div');
-          itemTitle.className = 'item-title item-label';
-          itemTitle.innerText = keyFormat;
-          itemInner.appendChild(itemTitle);
+        var itemTitle = document.createElement('div');
+        itemTitle.className = 'item-title item-label';
+        itemTitle.innerText = keyFormat;
+        itemInner.appendChild(itemTitle);
 
-          var itemWrap = document.createElement('div');
-          itemWrap.className = 'item-input-wrap';
-          itemInner.appendChild(itemWrap);
+        var itemWrap = document.createElement('div');
+        itemWrap.className = 'item-input-wrap';
+        itemInner.appendChild(itemWrap);
 
-          var itemInput = document.createElement('input');
-          itemInput.type = 'text';
-          itemInput.placeholder = parameter.metadata && parameter.metadata.description ? parameter.metadata.description : keyFormat;
-          itemInput.value = parameter.defaultValue ? parameter.defaultValue : "";
-          itemWrap.appendChild(itemInput);
-          parameter._INPUT = itemInput;
+        var itemInput = document.createElement('input');
+        itemInput.type = 'text';
+        itemInput.placeholder = parameter.metadata && parameter.metadata.description ? parameter.metadata.description : keyFormat;
+        itemInput.value = parameter.defaultValue ? parameter.defaultValue : "";
+        itemWrap.appendChild(itemInput);
+        parameter._INPUT = itemInput;
 
-          var itemClear = document.createElement('span');
-          itemClear.className = 'input-clear-button';
-          itemWrap.appendChild(itemClear);
-
-        }
+        var itemClear = document.createElement('span');
+        itemClear.className = 'input-clear-button';
+        itemWrap.appendChild(itemClear);
+        
       }
     }
   });
-  req.open("GET", 'templates/' + path + '/template.json');
+  req.open("GET", 'template/' + path + '/parameters');
   req.send();
 
   var btn = content.querySelector('#deploy');
   btn.onclick = () => {
 
-    if (typeof template === 'undefined') return;
+    if (typeof parameters === 'undefined') return;
 
-    var groupName = content.querySelector('#groupName').value;
-    var parameters = { groupName };
+    var parameters = { };
 
-    for (var key in template.parameters) {
-      var parameter = template.parameters[key];
+    for (var key in parameters) {
+      var parameter = parameters[key];
       if (parameter._INPUT) {
         parameters[key] = parameter._INPUT.value;
       }
     }
 
     var post = new XMLHttpRequest(); //fire and forget
-    post.open("POST", 'deploy/' + path);
+    post.open("POST", 'template/' + path + '/deploy');
     post.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
     post.send(JSON.stringify(parameters));
     router.back();
