@@ -19,6 +19,8 @@ Developed with minimum possible assets to work on an iPad with Pythonista 3.
  * \/templates\/index.html - Framework7 formatted template
  * \/static\/app.js - Framework7 application
  
- ### References
+ ### ARM references
 
-[Unique Names in ARM templates]( https://www.codeisahighway.com/use-uniquestring-function-to-generate-unique-names-for-resources-in-arm-template/)
+[Unique Names](https://www.codeisahighway.com/use-uniquestring-function-to-generate-unique-names-for-resources-in-arm-template/)
+
+[SSH Password](https://github.com/Azure/azure-quickstart-templates/blob/master/101-hdinsight-linux-ssh-password/azuredeploy.json)

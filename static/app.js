@@ -89,7 +89,7 @@ function loadTemplate(path, name, content) {
         itemInner.appendChild(itemWrap);
 
         var itemInput = document.createElement('input');
-        itemInput.type = 'text';
+        itemInput.type = parameter.type == 'securestring' ? 'password' : 'text';
         itemInput.placeholder = parameter.metadata && parameter.metadata.description ? parameter.metadata.description : keyFormat;
         itemInput.value = parameter.defaultValue ? parameter.defaultValue : "";
         itemWrap.appendChild(itemInput);

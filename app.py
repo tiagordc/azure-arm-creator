@@ -59,7 +59,7 @@ def icon(template):
 
 @app.route('/template/<template>/deploy', methods=['POST'])
 def deploy(template):
-	"""Start deployment of a new resource group"""
+	"""Deploy a new resource group based on a template and some given parameters"""
 	from azure.common.credentials import ServicePrincipalCredentials
 	from azure.mgmt.resource import ResourceManagementClient
 	from azure.mgmt.resource.resources.models import DeploymentMode
