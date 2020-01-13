@@ -64,7 +64,7 @@ def deploy(template):
 	from azure.mgmt.resource import ResourceManagementClient
 	from azure.mgmt.resource.resources.models import DeploymentMode
 	parameters = request.get_json()
-	group_name = os.environ['ARM_GROUP_PREFIX'] + parameters['Resource_Group_Name']
+	group_name = parameters['Resource_Group_Name']
 	parameters = {k: {'value': v} for k, v in parameters.items() }
 	credentials = ServicePrincipalCredentials(client_id=os.environ['AZURE_CLIENT_ID'], secret=os.environ['AZURE_CLIENT_SECRET'], tenant=os.environ['AZURE_TENANT_ID'])
 	subscription_id = os.environ['AZURE_SUBSCRIPTION_ID']

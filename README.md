@@ -6,7 +6,7 @@ Developed with minimum possible assets to work on an iPad with Pythonista 3.
 
 ## Folder structure
 
- * azure
+ * \[ARM_TEMPLATE_FOLDER\]
     * \[Template Folder\]
         * \[Template Name\].png - 256x256 png
         * template.json - ARM template
