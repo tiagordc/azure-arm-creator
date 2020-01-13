@@ -14,8 +14,8 @@ Developed with minimum possible assets to work on an iPad with Pythonista 3.
 
 ## Architecture
 
- * .env - Azure configuration 
- * app.py - Flask API
+ * .env - environment configuration
+ * app.py - Flask API endpoints
  * \/templates\/index.html - Framework7 formatted template
  * \/static\/app.js - Framework7 application
  
