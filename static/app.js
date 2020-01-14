@@ -22,14 +22,15 @@ var mainView = app.views.create('.view-main', {
   stackPages: true,
   on: {
     pageInit: function (data) {
-      switch (data.route.name) {
-        case 'home':
-          loadTemplates(data.pageEl.querySelector(".list > ul"));
-          break;
-        case 'template':
-          data.pageEl.querySelector(".title").innerHTML = data.route.params.name;
-          loadTemplate(data.route.params.path, data.route.params.name, data.pageEl.querySelector('.page-content'));
-          break;
+      if (data.route.name === 'home') {
+        loadTemplates(data.pageEl.querySelector(".list > ul"));
+      }
+    },
+    pageBeforeIn: function(data) {
+      var route = router.currentRoute;
+      if (route.name === 'template') {
+        data.pageEl.querySelector(".title").innerHTML = route.params.name;
+        loadTemplate(route.params.path, route.params.name, data.pageEl.querySelector('.page-content'));
       }
     }
   }
@@ -47,9 +48,7 @@ function loadTemplates(list) {
         template.className = "arm-template";
         template.innerHTML = '<a href="#" class="item-link"><div class="item-content"><div class="item-media"><img style="height: 32px;" src="template/' + element.path + '/icon"></div><div class="item-inner">' + element.name + '</div></div></a>';
         list.appendChild(template);
-        template.onclick = () => {
-          router.navigate({ name: 'template', params: { name: element.name, path: element.path } });
-        };
+        template.onclick = () => router.navigate('template/' + element.path + '/' + element.name);
       });
     }
   });
@@ -59,16 +58,19 @@ function loadTemplates(list) {
 
 function loadTemplate(path, name, content) {
   
-  var parameters = null;
+  var armParameters = null;
 
   var req = new XMLHttpRequest();
   req.addEventListener("load", () => {
     if (req.status === 200) {
-      parameters = JSON.parse(req.responseText);
-      var list = content.querySelector("#template-parameters");
-      for (var key in parameters) {
 
-        var parameter = parameters[key];
+      armParameters = JSON.parse(req.responseText);
+      var list = content.querySelector("#template-parameters");
+      list.innerHTML = '';
+
+      for (var key in armParameters) {
+
+        var parameter = armParameters[key];
         var keyFormat = key.replace(/_/g, " ");
 
         var parameterItem = document.createElement('li');
@@ -105,15 +107,12 @@ function loadTemplate(path, name, content) {
   req.open("GET", 'template/' + path + '/parameters');
   req.send();
 
-  var btn = content.querySelector('#deploy');
-  btn.onclick = () => {
-
-    if (typeof parameters === 'undefined') return;
+  content.querySelector('#deploy').onclick = () => {
 
     var parameters = { };
 
-    for (var key in parameters) {
-      var parameter = parameters[key];
+    for (var key in armParameters) {
+      var parameter = armParameters[key];
       if (parameter._INPUT) {
         parameters[key] = parameter._INPUT.value;
       }
