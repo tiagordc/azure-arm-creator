@@ -1,11 +1,21 @@
-import os
+import os, re
 from json import load as load_json
 from flask import Flask, render_template, send_from_directory, send_file, jsonify, abort, request
+from azure.common.credentials import ServicePrincipalCredentials
+from azure.mgmt.resource import ResourceManagementClient
+from azure.mgmt.compute import ComputeManagementClient
+from azure.mgmt.network import NetworkManagementClient
 from auth import admin_required, auth_required
 from PIL import Image
 
 app = Flask(__name__)
+
 template_folder = os.environ['ARM_TEMPLATE_FOLDER']
+credentials = ServicePrincipalCredentials(client_id=os.environ['AZURE_CLIENT_ID'], secret=os.environ['AZURE_CLIENT_SECRET'], tenant=os.environ['AZURE_TENANT_ID'])
+subscription_id = os.environ['AZURE_SUBSCRIPTION_ID']
+resource_client = ResourceManagementClient(credentials, subscription_id)
+compute_client = ComputeManagementClient(credentials, subscription_id)
+network_client = NetworkManagementClient(credentials, subscription_id)
 
 @app.route('/static/<path:path>', methods=['GET'])
 def static_files(path):
@@ -65,32 +75,53 @@ def icon(template):
 @admin_required
 def deploy(template):
 	"""Deploy a new resource group based on a template and some given parameters"""
-	from azure.common.credentials import ServicePrincipalCredentials
-	from azure.mgmt.resource import ResourceManagementClient
-	from azure.mgmt.resource.resources.models import DeploymentMode
 	parameters = request.get_json()
 	group_name = parameters['Resource_Group_Name']
+	user_name = parameters['Resource_Group_Admin']
+	user_password = parameters['Resource_Group_Password']
 	parameters = {k: {'value': v} for k, v in parameters.items() }
-	credentials = ServicePrincipalCredentials(client_id=os.environ['AZURE_CLIENT_ID'], secret=os.environ['AZURE_CLIENT_SECRET'], tenant=os.environ['AZURE_TENANT_ID'])
-	subscription_id = os.environ['AZURE_SUBSCRIPTION_ID']
-	client = ResourceManagementClient(credentials, subscription_id)
 	location = os.environ['AZURE_LOCATION']
 	resource_group_params = {'location':location}
 	resource_group_params.update(tags={'created-by': os.environ['ARM_CREATED_TAG'] })
-	client.resource_groups.create_or_update(group_name, resource_group_params)
+	resource_client.resource_groups.create_or_update(group_name, resource_group_params)
 	template_path = os.path.join(os.path.dirname(__file__), template_folder, template, 'template.json')
 	with open(template_path, 'r') as template_file_fd:
 		template_file = load_json(template_file_fd)
 	deployment_properties = { 'mode': DeploymentMode.incremental, 'template': template_file, 'parameters': parameters }
-	deployment_async_operation = client.deployments.create_or_update(group_name, 'azure-sample', deployment_properties)
+	deployment_async_operation = resource_client.deployments.create_or_update(group_name, 'azure-sample', deployment_properties)
 	deployment_async_operation.wait()
 	return "OK"
 
-@app.route('/<resource>/admin', methods=['GET'])
-@auth_required
-def resource(resource):
-	"""Resource Page"""
+@app.route('/<resource_group>/admin', methods=['GET'])
+@auth_required(resource_client)
+def resource(resource_group):
+	"""Resource group page"""
 	return render_template('resource.html')
+
+@app.route('/<resource_group>/vms', methods=['GET'])
+@auth_required(resource_client)
+def machines(resource_group):
+	"""List resource group machines"""
+	result = []
+	for vm in compute_client.virtual_machines.list(resource_group):
+		instance = compute_client.virtual_machines.instance_view(resource_group, vm.name)
+		vm_power = [x.code[x.code.index('/')+1:] for x in instance.statuses if x.code.startswith('PowerState')][0] 
+		vm_private_ips = []
+		vm_public_ips = []
+		for nic in vm.network_profile.network_interfaces:
+			nic_id = re.search("/resourceGroups/([^/]+).*/networkInterfaces/([^/]+).*", nic.id, re.DOTALL)
+			nic_details = network_client.network_interfaces.get(nic_id.group(1), nic_id.group(2))
+			for ip in nic_details.ip_configurations:
+				if ip.private_ip_address:
+					vm_private_ips.append(ip.private_ip_address)
+				if ip.public_ip_address and ip.public_ip_address.id:
+					public_ip_id = re.search("/resourceGroups/([^/]+).*/publicIPAddresses/([^/]+).*", ip.public_ip_address.id, re.DOTALL)
+					public_ip = network_client.public_ip_addresses.get(public_ip_id.group(1), public_ip_id.group(2))
+					vm_public_ips.append(public_ip.ip_address)
+		if vm.os_profile and vm.os_profile.admin_username:
+			vm_admin = vm.os_profile.admin_username
+		result.append({ "name": vm.name, "status": vm_power, "public": vm_public_ips, "private": vm_private_ips, "admin": vm_admin, "tags": vm.tags })
+	return jsonify(result)
 
 if __name__ == '__main__':
 	app.run()

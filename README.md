@@ -13,8 +13,8 @@ Developed with minimum possible assets to work on an iPad with Pythonista 3.
         * \[Template Name\].png - 256x256 png
         * template.json - ARM template
             * Parameter: "Resource_Group_Name": { "defaultValue": "", "type": "string" }
-            * Parameter: "Resource_Group_Admin": { "defaultValue": "", "type": "string" }
-            * Parameter: "Resource_Group_Password": { "defaultValue": "", "type": "securestring" }
+            * Parameter (optional): "Resource_Group_Admin": { "defaultValue": "", "type": "string" }
+            * Parameter (optional): "Resource_Group_Password": { "defaultValue": "", "type": "securestring" }
 
  * templates
     * admin.html - Template creation page
