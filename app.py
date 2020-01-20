@@ -120,7 +120,12 @@ def machines(resource_group):
 					vm_public_ips.append(public_ip.ip_address)
 		if vm.os_profile and vm.os_profile.admin_username:
 			vm_admin = vm.os_profile.admin_username
-		result.append({ "name": vm.name, "status": vm_power, "public": vm_public_ips, "private": vm_private_ips, "admin": vm_admin, "tags": vm.tags })
+		vm_os = 'unknown'
+		if vm.os_profile.windows_configuration:
+			vm_os = 'windows'
+		if vm.os_profile.linux_configuration:
+			vm_os = 'linux'
+		result.append({ "name": vm.name, "status": vm_power, "public": vm_public_ips, "private": vm_private_ips, "admin": vm_admin, "tags": vm.tags, "os": vm_os })
 	return jsonify(result)
 
 if __name__ == '__main__':

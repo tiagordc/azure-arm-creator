@@ -17,28 +17,108 @@ var app = new Framework7({
     stackPages: true,
     on: {
       pageInit: function (data) {
-        loadMachines(data.pageEl.querySelector(".list > ul"));
+        loadMachines(data.pageEl.querySelector(".page-content"));
       }
     }
   });
   
   var router = mainView.router;
   
-  function loadMachines(list) {
+  function loadMachines(content) {
     var req = new XMLHttpRequest();
     req.addEventListener("load", () => {
       if (req.status === 200) {
-          debugger;
-        // var templates = JSON.parse(req.responseText);
-        // templates.forEach(element => {
-        //   var template = document.createElement('li');
-        //   template.className = "arm-template";
-        //   template.innerHTML = '<a href="#" class="item-link"><div class="item-content"><div class="item-media"><img style="height: 32px;" src="template/' + element.path + '/icon"></div><div class="item-inner">' + element.name + '</div></div></a>';
-        //   list.appendChild(template);
-        //   template.onclick = () => {
-        //     router.navigate({name: 'template', params: { path: element.path, name: element.name }})
-        //   }
-        // });
+        var machines = JSON.parse(req.responseText);
+        machines.forEach(element => {
+
+          var cardItem = document.createElement('div');
+          cardItem.className = 'card';
+          content.appendChild(cardItem);
+
+          var cardHeader = document.createElement('div');
+          cardHeader.className = 'card-header';
+          cardHeader.innerText = element.tags && element.tags['arm-name'] ? element.tags['arm-name'] : element.name;
+          cardItem.appendChild(cardHeader);
+
+          var status = document.createElement('div');
+          status.className = 'powerState';
+          status.title = element.status;
+          cardHeader.appendChild(status);
+
+          var statusColor = document.createElement('span');
+          status.appendChild(statusColor);
+
+          switch (element.status) {
+            case 'running':
+              statusColor.style.backgroundColor = 'green';
+              break;
+            case 'stopped':
+            case 'stopping':
+            case 'deallocated':
+            case 'deallocating':
+              statusColor.style.backgroundColor = 'red';
+              break;
+            case 'starting':
+              statusColor.style.backgroundColor = 'yellow';
+              break;
+          }
+
+          var cardContent = document.createElement('div');
+          cardContent.className = 'card-content card-content-padding';
+          cardItem.appendChild(cardContent);
+
+          if (element.tags && element.tags['arm-description']) {
+            var description = document.createElement('div');
+            description.innerText = element.tags['arm-description'];
+            cardContent.appendChild(description);
+          }
+
+          if (element.public && element.public instanceof Array && element.public.length > 0) {
+            var ips = document.createElement('div');
+            ips.style.paddingTop = '10px';
+            ips.innerHTML = "Public IPs:"
+            var list = document.createElement('ul');
+            ips.appendChild(list);
+            element.public.forEach(ip => {
+              var listItem = document.createElement('li');
+              listItem.innerText = ip;
+              list.appendChild(listItem);
+            });
+            cardContent.appendChild(ips);
+          }
+
+          if (element.private && element.private instanceof Array && element.private.length > 0) {
+            var ips = document.createElement('div');
+            ips.style.paddingTop = '10px';
+            ips.innerHTML = "Private IPs:"
+            var list = document.createElement('ul');
+            ips.appendChild(list);
+            element.private.forEach(ip => {
+              var listItem = document.createElement('li');
+              listItem.innerText = ip;
+              list.appendChild(listItem);
+            });
+            cardContent.appendChild(ips);
+          }
+
+          if (element.admin) {
+            var admin = document.createElement('div');
+            admin.style.paddingTop = '10px';
+            admin.innerHTML = 'Account: ' + element.admin;
+            cardContent.appendChild(admin);
+          }
+
+          var cardFooter = document.createElement('div');
+          cardFooter.className = 'card-footer';
+          cardFooter.innerHTML = '<span></span>';
+          cardItem.appendChild(cardFooter);
+
+          var restart = document.createElement('a');
+          restart.className = 'button button-outline';
+          restart.innerText = "Restart";
+          cardFooter.appendChild(restart);
+          
+        });
       }
     });
     req.open("GET", 'vms');
