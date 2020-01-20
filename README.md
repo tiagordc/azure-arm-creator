@@ -2,22 +2,27 @@
 
 Allow your users to create and manage azure resources (based on a set of ARM templates) without any kind of cloud knowledge.
 
+Each template will create a resource group with an admin user and password.
+
 Developed with minimum possible assets to work on an iPad with Pythonista 3.
 
-## Folder structure
+## Project structure
 
  * \[ARM_TEMPLATE_FOLDER\]
     * \[Template Folder\]
         * \[Template Name\].png - 256x256 png
         * template.json - ARM template
-            * First parameter must be: "Resource_Group_Name": { "defaultValue": "", "type": "String" }
+            * Parameter: "Resource_Group_Name": { "defaultValue": "", "type": "string" }
+            * Parameter: "Resource_Group_Admin": { "defaultValue": "", "type": "string" }
+            * Parameter: "Resource_Group_Password": { "defaultValue": "", "type": "securestring" }
 
-## Architecture
-
- * .env - environment configuration
- * app.py - Flask API endpoints
- * \/templates\/index.html - Framework7 formatted template
- * \/static\/app.js - Framework7 application
+ * templates
+    * admin.html - Template creation page
+    * resource.html - Resource group administration page
+    
+ * .env - environment configuration with [azure authentication](https://docs.microsoft.com/en-us/azure/azure-resource-manager/resource-group-create-service-principal-portal#get-application-id-and-authentication-key)
+ * app.py - API endpoints
+ * auth.py - Authentication decorators
  
  ### ARM references
 

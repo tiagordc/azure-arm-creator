@@ -1,6 +1,7 @@
 import os
-import json
+from json import load as load_json
 from flask import Flask, render_template, send_from_directory, send_file, jsonify, abort, request
+from auth import admin_required, auth_required
 from PIL import Image
 
 app = Flask(__name__)
@@ -11,12 +12,14 @@ def static_files(path):
 	"""Serve static files from the static folders"""
 	return send_from_directory('static', path)
 
-@app.route('/', methods=['GET'])
-def index():
-	"""Home"""
-	return render_template('index.html')
+@app.route('/admin', methods=['GET'])
+@admin_required
+def admin():
+	"""Admin Page"""
+	return render_template('admin.html')
 
 @app.route('/templates', methods=['GET'])
+@admin_required
 def templates():
 	"""List available templates"""
 	result = []
@@ -37,11 +40,12 @@ def templates():
 	return jsonify(result)
 
 @app.route('/template/<template>/parameters', methods=['GET'])
+@admin_required
 def parameters(template):
 	"""Get template parameters"""
 	template_path = os.path.join(os.path.dirname(__file__), template_folder, template, 'template.json')
 	with open(template_path, 'r') as template_file_fd:
-		template_file = json.load(template_file_fd)
+		template_file = load_json(template_file_fd)
 	return jsonify(template_file['parameters'])
 
 @app.route('/template/<template>/icon', methods=['GET'])
@@ -58,6 +62,7 @@ def icon(template):
 	abort(404)
 
 @app.route('/template/<template>/deploy', methods=['POST'])
+@admin_required
 def deploy(template):
 	"""Deploy a new resource group based on a template and some given parameters"""
 	from azure.common.credentials import ServicePrincipalCredentials
@@ -75,12 +80,17 @@ def deploy(template):
 	client.resource_groups.create_or_update(group_name, resource_group_params)
 	template_path = os.path.join(os.path.dirname(__file__), template_folder, template, 'template.json')
 	with open(template_path, 'r') as template_file_fd:
-		template_file = json.load(template_file_fd)
+		template_file = load_json(template_file_fd)
 	deployment_properties = { 'mode': DeploymentMode.incremental, 'template': template_file, 'parameters': parameters }
 	deployment_async_operation = client.deployments.create_or_update(group_name, 'azure-sample', deployment_properties)
 	deployment_async_operation.wait()
 	return "OK"
 
+@app.route('/<resource>/admin', methods=['GET'])
+@auth_required
+def resource(resource):
+	"""Resource Page"""
+	return render_template('resource.html')
+
 if __name__ == '__main__':
 	app.run()
-	

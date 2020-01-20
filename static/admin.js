@@ -6,9 +6,9 @@ var app = new Framework7({
   name: 'Resource Creator',
   routes: [
     {
-      name: 'home',
-      path: '/',
-      pageName: 'home'
+      name: 'admin',
+      path: '/admin',
+      pageName: 'admin'
     },
     {
       name: 'template',
@@ -22,7 +22,7 @@ var mainView = app.views.create('.view-main', {
   stackPages: true,
   on: {
     pageInit: function (data) {
-      if (data.route.name === 'home') {
+      if (data.route.name === 'admin') {
         loadTemplates(data.pageEl.querySelector(".list > ul"));
       }
     },
@@ -48,7 +48,9 @@ function loadTemplates(list) {
         template.className = "arm-template";
         template.innerHTML = '<a href="#" class="item-link"><div class="item-content"><div class="item-media"><img style="height: 32px;" src="template/' + element.path + '/icon"></div><div class="item-inner">' + element.name + '</div></div></a>';
         list.appendChild(template);
-        template.onclick = () => router.navigate('template/' + element.path + '/' + element.name);
+        template.onclick = () => {
+          router.navigate({name: 'template', params: { path: element.path, name: element.name }})
+        }
       });
     }
   });
