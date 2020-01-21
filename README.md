@@ -12,7 +12,9 @@ Developed with minimum possible assets to work on an iPad to demonstrate the pro
 
  * \[ARM_TEMPLATE_FOLDER\] - azure by default
     * \[Template Folder\] - any name to store template files
+    
         * \[Template Name\].png - 256x256 png file that also defines the name to display on the list
+        
         * template.json - ARM template file with at least these parameters:
             * "Resource_Group_Name": { "defaultValue": "", "type": "string" }
             * "Resource_Group_Admin": { "defaultValue": "", "type": "string" }
