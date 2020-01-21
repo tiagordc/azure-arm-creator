@@ -117,7 +117,8 @@ def machines(resource_group):
 				if ip.public_ip_address and ip.public_ip_address.id:
 					public_ip_id = re.search("/resourceGroups/([^/]+).*/publicIPAddresses/([^/]+).*", ip.public_ip_address.id, re.DOTALL)
 					public_ip = network_client.public_ip_addresses.get(public_ip_id.group(1), public_ip_id.group(2))
-					vm_public_ips.append(public_ip.ip_address)
+					if public_ip.ip_address:
+						vm_public_ips.append(public_ip.ip_address)
 		if vm.os_profile and vm.os_profile.admin_username:
 			vm_admin = vm.os_profile.admin_username
 		vm_os = 'unknown'
@@ -133,6 +134,20 @@ def machines(resource_group):
 def restart(resource_group, machine):
 	async_vm_restart = compute_client.virtual_machines.restart(resource_group, machine)
 	async_vm_restart.wait()
+	return '', 200
+
+@app.route('/<resource_group>/<machine>/stop', methods=['POST'])
+@auth_required(resource_client)
+def stop(resource_group, machine):
+	async_vm_deallocate = compute_client.virtual_machines.deallocate(resource_group, machine)
+	async_vm_deallocate.wait()
+	return '', 200
+
+@app.route('/<resource_group>/<machine>/start', methods=['POST'])
+@auth_required(resource_client)
+def start(resource_group, machine):
+	async_vm_start = compute_client.virtual_machines.start(resource_group, machine)
+	async_vm_start.wait()
 	return '', 200
 
 if __name__ == '__main__':

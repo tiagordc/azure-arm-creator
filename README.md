@@ -1,20 +1,22 @@
 # Azure Resource Creator
 
-Allow your users to create and manage azure resources (based on a set of ARM templates) without any kind of cloud knowledge.
+Allow users to create and manage Azure resources (based on hidden ARM templates) without any kind of cloud knowledge.
 
-Each template will create a resource group with an admin user and password.
+Each template will create a resource group in Azure and a management area within this tool protected with a password.
 
-Developed with minimum possible assets to work on an iPad with Pythonista 3.
+Uses basic authentication using decorators so any other logic can be used instead.
+
+Developed with minimum possible assets to work on an iPad to demonstrate the proof of concept.
 
 ## Project structure
 
- * \[ARM_TEMPLATE_FOLDER\]
-    * \[Template Folder\]
-        * \[Template Name\].png - 256x256 png
-        * template.json - ARM template
-            * Parameter: "Resource_Group_Name": { "defaultValue": "", "type": "string" }
-            * Parameter (optional): "Resource_Group_Admin": { "defaultValue": "", "type": "string" }
-            * Parameter (optional): "Resource_Group_Password": { "defaultValue": "", "type": "securestring" }
+ * \[ARM_TEMPLATE_FOLDER\] - azure by default
+    * \[Template Folder\] - any name to store template files
+        * \[Template Name\].png - 256x256 png file that also defines the name to display on the list
+        * template.json - ARM template file with at least these parameters:
+            * "Resource_Group_Name": { "defaultValue": "", "type": "string" }
+            * "Resource_Group_Admin": { "defaultValue": "", "type": "string" }
+            * "Resource_Group_Password": { "defaultValue": "", "type": "securestring" }
 
  * templates
     * admin.html - Template creation page

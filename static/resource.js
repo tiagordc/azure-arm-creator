@@ -33,6 +33,9 @@ function loadMachines(content) {
       content.innerHTML = '';
       machines.forEach(element => {
 
+        var isRunning = element.status === 'running' || element.status === 'starting';
+        var isWorking = element.status !== 'running' && element.status.endsWith('ing');
+
         var cardItem = document.createElement('div');
         cardItem.className = 'card';
         content.appendChild(cardItem);
@@ -41,29 +44,6 @@ function loadMachines(content) {
         cardHeader.className = 'card-header';
         cardHeader.innerText = element.tags && element.tags['arm-name'] ? element.tags['arm-name'] : element.name;
         cardItem.appendChild(cardHeader);
-
-        var status = document.createElement('div');
-        status.className = 'powerState';
-        status.title = element.status;
-        cardHeader.appendChild(status);
-
-        var statusColor = document.createElement('span');
-        status.appendChild(statusColor);
-
-        switch (element.status) {
-          case 'running':
-            statusColor.style.backgroundColor = 'green';
-            break;
-          case 'stopped':
-          case 'stopping':
-          case 'deallocated':
-          case 'deallocating':
-            statusColor.style.backgroundColor = 'red';
-            break;
-          case 'starting':
-            statusColor.style.backgroundColor = 'yellow';
-            break;
-        }
 
         var cardContent = document.createElement('div');
         cardContent.className = 'card-content card-content-padding';
@@ -75,7 +55,7 @@ function loadMachines(content) {
           cardContent.appendChild(description);
         }
 
-        if (element.public && element.public instanceof Array && element.public.length > 0) {
+        if (isRunning && element.public && element.public instanceof Array && element.public.length > 0) {
           var ips = document.createElement('div');
           ips.style.paddingTop = '10px';
           ips.innerHTML = "Public IPs:"
@@ -110,7 +90,7 @@ function loadMachines(content) {
                   content += '</ul></div></div>';
                 }
   
-                var popup = app.popup.create({ content: content });
+                var popup = app.popup.create({ content: content, swipeToClose: true, closeOnEscape: true });
                 popup.open();
                 
               };
@@ -124,7 +104,7 @@ function loadMachines(content) {
           cardContent.appendChild(ips);
         }
 
-        if (element.private && element.private instanceof Array && element.private.length > 0) {
+        if (isRunning && element.private && element.private instanceof Array && element.private.length > 0) {
           var ips = document.createElement('div');
           ips.style.paddingTop = '10px';
           ips.innerHTML = "Private IPs:"
@@ -143,16 +123,53 @@ function loadMachines(content) {
         cardFooter.innerHTML = '<span></span>';
         cardItem.appendChild(cardFooter);
 
-        if (element.status === 'running') {
-          var restart = document.createElement('a');
-          restart.className = 'button button-outline';
-          restart.innerText = "Restart";
-          restart.onclick = () => {
-            var post = new XMLHttpRequest(); //fire and forget
-            post.open("POST", element.name + '/restart');
-            post.send();
-          };
-          cardFooter.appendChild(restart);
+        var segmentedButton = document.createElement('p');
+        segmentedButton.className = 'segmented segmented-strong';
+        segmentedButton.style.width = '200px';
+        cardFooter.appendChild(segmentedButton);
+
+        var stopButton = document.createElement('button');
+        segmentedButton.appendChild(stopButton);
+
+        if (isRunning) {
+          stopButton.innerText = 'Stop';
+          stopButton.className = isWorking ? 'button disabled' : 'button';
+          if (!isWorking) {
+            stopButton.onclick = () => {
+              stopButton.className += ' disabled';
+              var post = new XMLHttpRequest(); 
+              post.open("POST", element.name + '/stop');
+              post.send();
+            };
+          }
+        }
+        else {
+          stopButton.innerText = isWorking ? 'Stopping' : 'Stopped';
+          stopButton.className = 'button button-active disabled';
+          stopButton.style.color = 'red';
+          stopButton.style.fontWeight = 'bold';
+        }
+
+        var startButton = document.createElement('button');
+        segmentedButton.appendChild(startButton);
+
+        if (isRunning) {
+          startButton.innerText = isWorking ? 'Starting' : 'Started';
+          startButton.className = 'button button-active disabled';
+          startButton.style.color = 'green';
+          startButton.style.fontWeight = 'bold';
+        }
+        else {
+          startButton.innerText = 'Start';
+          startButton.className = isWorking ? 'button disabled' : 'button';
+          if (!isWorking) {
+            startButton.onclick = () => {
+              startButton.className += ' disabled';
+              var post = new XMLHttpRequest(); 
+              post.open("POST", element.name + '/start');
+              post.send();
+            };
+          }
         }
         
       });
