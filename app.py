@@ -128,5 +128,12 @@ def machines(resource_group):
 		result.append({ "name": vm.name, "status": vm_power, "public": vm_public_ips, "private": vm_private_ips, "admin": vm_admin, "tags": vm.tags, "os": vm_os })
 	return jsonify(result)
 
+@app.route('/<resource_group>/<machine>/restart', methods=['POST'])
+@auth_required(resource_client)
+def restart(resource_group, machine):
+	async_vm_restart = compute_client.virtual_machines.restart(resource_group, machine)
+	async_vm_restart.wait()
+	return '', 200
+
 if __name__ == '__main__':
 	app.run()

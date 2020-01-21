@@ -28,13 +28,13 @@ def auth_required(resource_client):
         def decorated_function(*args, **kwargs):
             authorization_header = request.headers.get('Authorization')
             if authorization_header:
+                resource_group_name = re.search("/([^/]+).*/", request.path, re.DOTALL).group(1)
+                resource_group = resource_client.resource_groups.get(resource_group_name)
                 encoded_uname_pass = authorization_header.split()[-1]
                 decoded_uname_pass = b64decode(encoded_uname_pass)
                 username, password = decoded_uname_pass.decode().split(':', 1)
                 if is_admin(username, password):
                     return f(*args, **kwargs)
-                resource_group_name = re.search("/([^/]+).*/", request.path, re.DOTALL)
-                resource_group = resource_client.resource_groups.get(resource_group_name.group(1))
                 auth = resource_group.tags[os.environ['ARM_AUTH_TAG']]
                 if encoded_uname_pass == auth:
                     return f(*args, **kwargs)
