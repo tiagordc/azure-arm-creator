@@ -49,6 +49,14 @@ def templates():
 			result.append(item)
 	return jsonify(result)
 
+@app.route('/groups', methods=['GET'])
+@admin_required
+def groups():
+	"""List created resource groups"""
+	groups = resource_client.resource_groups.list(filter="tagName eq 'created-by' and tagValue eq '" + os.environ['ARM_CREATED_TAG'] + "'")
+	result = [x.name for x in groups]
+	return jsonify(result)
+
 @app.route('/template/<template>/parameters', methods=['GET'])
 @admin_required
 def parameters(template):
@@ -90,7 +98,7 @@ def deploy(template):
 	deployment_properties = { 'mode': DeploymentMode.incremental, 'template': template_file, 'parameters': parameters }
 	deployment_async_operation = resource_client.deployments.create_or_update(group_name, 'azure-sample', deployment_properties)
 	deployment_async_operation.wait()
-	return "OK"
+	return '', 200
 
 @app.route('/<resource_group>/admin', methods=['GET'])
 @auth_required(resource_client)
