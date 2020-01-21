@@ -19,18 +19,27 @@ var mainView = app.views.create('.view-main', {
     pageInit: function (data) {
       if (data.router.currentRoute.name === 'home') {
         var content = data.pageEl.querySelector(".page-content");
-        loadMachines(content);
+        refreshContent(content);
       }
     }
   }
 });
 
-function loadMachines(content) {
+function refreshContent(content) {
+
   var req = new XMLHttpRequest();
+
   req.addEventListener("load", () => {
+
+    var refresh = 60000;
+
     if (req.status === 200) {
+
+      refresh = 15000;
+
       var machines = JSON.parse(req.responseText);
       content.innerHTML = '';
+
       machines.forEach(element => {
 
         var isRunning = element.status === 'running' || element.status === 'starting';
@@ -133,19 +142,24 @@ function loadMachines(content) {
 
         if (isRunning) {
           stopButton.innerText = 'Stop';
-          stopButton.className = isWorking ? 'button disabled' : 'button';
-          if (!isWorking) {
+          stopButton.className = 'button button-active';
+          if (isWorking) {
+            stopButton.className += ' disabled';
+          } 
+          else {
             stopButton.onclick = () => {
+              clearTimeout(timeout);
               stopButton.className += ' disabled';
               var post = new XMLHttpRequest(); 
               post.open("POST", element.name + '/stop');
               post.send();
+              timeout = setTimeout(() => { refreshContent(content); }, 2000);
             };
           }
         }
         else {
           stopButton.innerText = isWorking ? 'Stopping' : 'Stopped';
-          stopButton.className = 'button button-active disabled';
+          stopButton.className = 'button disabled';
           stopButton.style.color = 'red';
           stopButton.style.fontWeight = 'bold';
         }
@@ -155,26 +169,37 @@ function loadMachines(content) {
 
         if (isRunning) {
           startButton.innerText = isWorking ? 'Starting' : 'Started';
-          startButton.className = 'button button-active disabled';
+          startButton.className = 'button disabled';
           startButton.style.color = 'green';
           startButton.style.fontWeight = 'bold';
         }
         else {
           startButton.innerText = 'Start';
-          startButton.className = isWorking ? 'button disabled' : 'button';
-          if (!isWorking) {
+          startButton.className = 'button button-active';
+          if (isWorking) {
+            startButton.className += ' disabled';
+          } 
+          else {
             startButton.onclick = () => {
+              clearTimeout(timeout);
               startButton.className += ' disabled';
               var post = new XMLHttpRequest(); 
               post.open("POST", element.name + '/start');
               post.send();
+              timeout = setTimeout(() => { refreshContent(content); }, 2000);
             };
           }
         }
         
       });
+
     }
+    
+    var timeout = setTimeout(() => { refreshContent(content); }, refresh);
+
   });
+
   req.open("GET", 'vms');
   req.send();
+
 }

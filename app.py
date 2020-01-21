@@ -105,7 +105,10 @@ def machines(resource_group):
 	result = []
 	for vm in compute_client.virtual_machines.list(resource_group):
 		instance = compute_client.virtual_machines.instance_view(resource_group, vm.name)
-		vm_power = [x.code[x.code.index('/')+1:] for x in instance.statuses if x.code.startswith('PowerState')][0] 
+		vm_power = 'unknown'
+		power_state = [x.code[x.code.index('/')+1:] for x in instance.statuses if x.code.startswith('PowerState')]
+		if len(power_state) > 0:
+			vm_power = power_state[0] 
 		vm_private_ips = []
 		vm_public_ips = []
 		for nic in vm.network_profile.network_interfaces:
