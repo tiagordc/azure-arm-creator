@@ -6,9 +6,9 @@ var app = new Framework7({
   name: 'Resource Creator',
   routes: [
     {
-      name: 'admin',
+      name: 'index',
       path: '/admin',
-      pageName: 'admin'
+      pageName: 'index'
     },
     {
       name: 'template',
@@ -22,7 +22,7 @@ var mainView = app.views.create('.view-main', {
   stackPages: true,
   on: {
     pageInit: function (data) {
-      if (data.route.name === 'admin') {
+      if (data.route.name === 'index') {
         loadTemplates(data.pageEl.querySelector(".list > ul"));
       }
     },

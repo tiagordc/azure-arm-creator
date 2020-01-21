@@ -8,20 +8,37 @@
     <meta name="theme-color" content="#2196f3">
     <title>Azure Resource Creator</title>
     <link rel="stylesheet" href="static/framework7/5.3.0/css/framework7.bundle.min.css">
+    <link rel="stylesheet" href="static/framework7/5.3.0/css/framework7-icons.css">
 </head>
 
 <body>
 
     <div id="app">
 
+        <div class="panel panel-left panel-reveal">
+            <div class="block">
+                <div class="list simple-list">
+                    <ul>
+                        <li><a href="/admin">New Resource</a></li>
+                        <li><a href="/resources">Resource List</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
         <div class="view view-main">
 
-            <div data-name="admin" class="page">
+            <div data-name="index" class="page">
 
                 <div class="navbar">
                     <div class="navbar-bg"></div>
                     <div class="navbar-inner sliding">
                         <div class="title">Templates</div>
+                        <div class="right">
+                            <a href="#" class="link icon-only panel-open">
+                                <i class="f7-icons size-22">bars</i>
+                            </a>
+                        </div>
                     </div>
                 </div>
 
