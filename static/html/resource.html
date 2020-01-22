@@ -13,17 +13,17 @@
             
             {{#each machines}}
             <div class="card" data-index="{{@index}}">
-                <div class="card-header">{{this.header}}</div>
+                <div class="card-header">{{header}}</div>
                 <div class="card-content card-content-padding">
-                    {{#if this.description}}
-                        <div>{{this.description}}</div>
+                    {{#if description}}
+                        <div>{{description}}</div>
                     {{/if}}
                     {{#if showPublicIps}}
                         <div style="padding-top: 10px;">
                             Public IPs:
                             <ul>
-                                {{#each this.public}}
-                                    <li><a @click="openHelp">{{this}}</a></li>
+                                {{#each public}}
+                                    <li><a @click="howTo">{{this}}</a></li>
                                 {{/each}}
                             </ul>
                         </div>
@@ -32,7 +32,7 @@
                         <div style="padding-top: 10px;">
                             Internal IPs:
                             <ul>
-                                {{#each this.private}}
+                                {{#each private}}
                                     <li>{{this}}</li>
                                 {{/each}}
                             </ul>
@@ -42,12 +42,8 @@
                 <div class="card-footer">
                     <span></span>
                     <p class="segmented segmented-strong" style="width: 200px;">
-                        <button class="{{this.stopClass}}" style="{{this.stopStyle}}" @click="stopVm">
-                            {{this.stopText}}
-                        </button>
-                        <button class="{{this.startClass}}" style="{{this.startStyle}}" @click="startVm">
-                            {{this.startText}}
-                        </button>
+                        <button class="{{stopClass}}" style="{{stopStyle}}" @click="stopVm">{{stopText}}</button>
+                        <button class="{{startClass}}" style="{{startStyle}}" @click="startVm">{{startText}}</button>
                     </p>
                 </div>
             </div>
@@ -83,7 +79,7 @@
                 
                 app.request.post(element.name + '/start');
 
-                var timeout = setTimeout(self.reload, 2000);
+                var timeout = setTimeout(self.reload, 5000);
                 self.$setState({ timer: timeout });
 
             },
@@ -101,11 +97,11 @@
 
                 app.request.post(element.name + '/stop');
 
-                var timeout = setTimeout(self.reload, 2000);
+                var timeout = setTimeout(self.reload, 5000);
                 self.$setState({ timer: timeout });
 
             },
-            openHelp: function (ev) {
+            howTo: function (ev) {
 
                 var self = this;
                 var app = self.$app;
