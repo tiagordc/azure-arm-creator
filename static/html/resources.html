@@ -1,0 +1,60 @@
+<template>
+
+    <div class="page">
+
+        <div class="navbar">
+            <div class="navbar-bg"></div>
+            <div class="navbar-inner sliding">
+                <div class="left">
+                    <a href="#" class="link icon-only panel-open">
+                        <i class="f7-icons size-22">bars</i>
+                    </a>
+                </div>
+                <div class="title">Resource List</div>
+            </div>
+        </div>
+
+        <div class="page-content">
+
+            <div class="block block-strong">
+                <p>Select from the existing resource groups to view more details. A new page will open that can be shared with the resource owner.</p>
+            </div>
+
+            <div class="list links-list">
+                <ul>
+                    {{#each groups}}
+                        <li>
+                            <a class="link external" href="/{{this}}/admin" target="_blank">
+                                {{this}}
+                            </a>
+                        </li>
+                    {{/each}}
+                </ul>
+            </div>
+            
+        </div>
+
+    </div>
+
+</template>
+
+<script>
+    return {
+        data: function () {
+            return {
+                groups: []
+            }
+        },
+        on: {
+            pageInit: function (e, page) {
+                var self = this;
+                var app = self.$app;
+                app.request.get('groups', function (data) {
+                    self.$setState({
+                        groups: JSON.parse(data)
+                    });
+                });
+            }
+        }
+    }
+</script>

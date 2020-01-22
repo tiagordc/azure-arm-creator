@@ -1,0 +1,93 @@
+<template>
+
+    <div class="page">
+
+        <div class="navbar">
+            <div class="navbar-bg"></div>
+            <div class="navbar-inner sliding">
+                <div class="left">
+                    <a href="#" class="link back">
+                        <i class="icon icon-back"></i>
+                        <span class="if-not-md">Back</span>
+                    </a>
+                </div>
+                <div class="title">{{name}}</div>
+            </div>
+        </div>
+
+        <div class="page-content">
+
+            <div class="block-title">Parameters</div>
+
+            <form class="list no-hairlines-md" id="my-form">
+                <ul>
+                    {{#each fields}}
+                    <li class="item-content item-input">
+                        <div class="item-inner">
+                            <div class="item-title item-label">{{this.label}}</div>
+                            <div class="item-input-wrap">
+                                <input type="{{this.inputType}}" placeholder="{{this.placeholder}}" value="{{this.defaultValue}}" name="{{this.name}}">
+                            </div>
+                        </div>
+                    </li>
+                    {{/each}}
+                </ul>
+            </form>
+
+            <div class="block">
+                <div class="row">
+                    <button id="deploy" class="col button button-outline">Create</button>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+</template>
+
+<script>
+    return {
+        data: function () {
+            return {
+                name: this.$route.params.name,
+                fields: []
+            }
+        },
+        on: {
+            pageInit: function (e, page) {
+
+                var self = this;
+                var app = self.$app;
+                var path = self.$route.params.path;
+
+                app.request.get('template/' + path + '/parameters', function (data) {
+
+                    var armParameters = JSON.parse(data);
+                    var armFields = [];
+
+                    for (var key in armParameters) {
+                        var parameter = armParameters[key];
+                        parameter.name = key;
+                        parameter.label = key.replace(/_/g, " ");
+                        parameter.inputType = parameter.type == 'securestring' ? 'password' : 'text';
+                        parameter.placeholder = parameter.metadata && parameter.metadata.description ? parameter.metadata.description : parameter.label;
+                        armFields.push(parameter);
+                    }
+
+                    self.$setState({
+                        fields: armFields
+                    });
+
+                });
+
+                self.el.querySelector("#deploy").onclick = () => {
+                    var formData = app.form.convertToData('#my-form');
+                    app.request.postJSON('template/' + path + '/deploy', formData);
+                    page.router.back();
+                };
+
+            }
+        }
+    }
+</script>
