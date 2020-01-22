@@ -1,0 +1,195 @@
+<template>
+
+    <div class="page">
+
+        <div class="navbar">
+            <div class="navbar-bg"></div>
+            <div class="navbar-inner sliding">
+                <div class="title">{{name}}</div>
+            </div>
+        </div>
+
+        <div class="page-content">
+            
+            {{#each machines}}
+            <div class="card" data-index="{{@index}}">
+                <div class="card-header">{{this.header}}</div>
+                <div class="card-content card-content-padding">
+                    {{#if this.description}}
+                        <div>{{this.description}}</div>
+                    {{/if}}
+                    {{#if showPublicIps}}
+                        <div style="padding-top: 10px;">
+                            Public IPs:
+                            <ul>
+                                {{#each this.public}}
+                                    <li><a @click="openHelp">{{this}}</a></li>
+                                {{/each}}
+                            </ul>
+                        </div>
+                    {{/if}}
+                    {{#if showPrivateIps}}
+                        <div style="padding-top: 10px;">
+                            Internal IPs:
+                            <ul>
+                                {{#each this.private}}
+                                    <li>{{this}}</li>
+                                {{/each}}
+                            </ul>
+                        </div>
+                    {{/if}}
+                </div>
+                <div class="card-footer">
+                    <span></span>
+                    <p class="segmented segmented-strong" style="width: 200px;">
+                        <button class="{{this.stopClass}}" style="{{this.stopStyle}}" @click="stopVm">
+                            {{this.stopText}}
+                        </button>
+                        <button class="{{this.startClass}}" style="{{this.startStyle}}" @click="startVm">
+                            {{this.startText}}
+                        </button>
+                    </p>
+                </div>
+            </div>
+            {{/each}}
+
+        </div>
+
+    </div>
+
+</template>
+
+<script>
+    return {
+        data: function () {
+            return {
+                name: this.$route.params.name,
+                machines: [],
+                timer: null
+            }
+        },
+        methods: {
+            startVm: function (ev) {
+
+                var self = this;
+                clearTimeout(self.timer);
+
+                var app = self.$app;
+                var target = ev.currentTarget;
+                target.className += ' disabled';
+
+                var vmIndex = parseInt(target.closest('.card').attributes["data-index"].value);
+                var element = self.machines[vmIndex];
+                
+                app.request.post(element.name + '/start');
+
+                var timeout = setTimeout(self.reload, 2000);
+                self.$setState({ timer: timeout });
+
+            },
+            stopVm: function (ev) {
+
+                var self = this;
+                clearTimeout(self.timer);
+
+                var app = self.$app;
+                var target = ev.currentTarget;
+                target.className += ' disabled';
+
+                var vmIndex = parseInt(target.closest('.card').attributes["data-index"].value);
+                var element = self.machines[vmIndex];
+
+                app.request.post(element.name + '/stop');
+
+                var timeout = setTimeout(self.reload, 2000);
+                self.$setState({ timer: timeout });
+
+            },
+            openHelp: function (ev) {
+
+                var self = this;
+                var app = self.$app;
+                var target = ev.currentTarget;
+                var vmIndex = parseInt(target.closest('.card').attributes["data-index"].value);
+                var element = self.machines[vmIndex];
+                var ip = target.innerText;
+
+                var content = '';
+
+                if (element.os === 'linux') {
+                  content = '<div class="popup"><div class="block"><p>Use an SSH client such as <a href="https://www.putty.org/">PuTTY</a> (for Windows) to connect to this machine:</p><br /><img src="../static/images/PuTTY.png" style="position: relative; left: 50%; margin-left: -150px;" ><br /><br /><ul>';
+                  if (element.admin) content += '<li>Connection: <b>ssh ' + element.admin + '@' + ip + '</b></li>';
+                  content += '<li>IP address: <b>' + ip + '</b></li><li>Port: <b>22</b></li>';
+                  if (element.admin) content += '<li>User: <b>' + element.admin + '</b></li>';
+                  content += '</ul></div></div>';
+                }
+                else if (element.os === 'windows') {
+                  content = '<div class="popup"><div class="block"><p>Use Remote Desktop app to connect to this machine:</p><br /><img src="../static/images/RDP.jpg" style="position: relative; left: 50%; margin-left: -210px;" ><br /><br /><ul>';
+                  content += '<li>Computer: <b>' + ip + '</b></li><li>Port: <b>3389</b></li>';
+                  if (element.admin) content += '<li>User name: <b>' + element.admin + '</b></li>';
+                  content += '</ul></div></div>';
+                }
+                else {
+                    return;
+                }
+  
+                var popup = app.popup.create({ content: content, swipeToClose: true, closeOnEscape: true });
+                popup.open();
+
+            },
+            reload: function() {
+
+                var self = this;
+                var app = self.$app;
+
+                app.request.get('vms', null, function (data) {
+                    
+                    var machines = JSON.parse(data);
+
+                    machines.forEach(element => {
+
+                        element.isRunning = element.status === 'running' || element.status === 'starting';
+                        element.isWorking = element.status !== 'running' && element.status.endsWith('ing');
+                        element.header = element.tags && element.tags['arm-name'] ? element.tags['arm-name'] : element.name;
+                        element.description = element.tags && element.tags['arm-description'] ? element.tags['arm-description'] : null;
+                        element.showPublicIps = element.isRunning && element.public && element.public instanceof Array && element.public.length > 0;
+                        element.showPrivateIps = element.isRunning && element.private && element.private instanceof Array && element.private.length > 0;
+
+                        if (element.isRunning) {
+                            element.stopText = 'Stop';
+                            element.stopClass = 'button button-active';
+                            if (element.isWorking) element.stopClass += ' disabled';
+                            element.stopStyle = '';
+                            element.startText =  element.isWorking ? 'Starting' : 'Started';
+                            element.startClass = 'button disabled';
+                            element.startStyle = 'color: green; font-weight: bold;';
+                        }
+                        else {
+                            element.stopText = element.isWorking ? 'Stopping' : 'Stopped';
+                            element.stopClass = 'button disabled';
+                            element.stopStyle = 'color: red; font-weight: bold;';
+                            element.startText =  'Start';
+                            element.startClass = 'button button-active';
+                            if (element.isWorking) element.startClass += ' disabled';
+                            element.startStyle = '';
+                        }
+
+                    });
+
+                    var timeout = setTimeout(self.reload, 15000);
+                    self.$setState({ machines: machines, timer: timeout });
+
+                }, function () {
+                    var timeout = setTimeout(self.reload, 60000);
+                    self.$setState({ timer: timeout });
+                });
+
+            }
+        },
+        on: {
+            pageInit: function (e, page) {
+                this.reload();
+            }
+        }
+    }
+</script>
