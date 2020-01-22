@@ -11,27 +11,48 @@
                     </a>
                 </div>
                 <div class="title">Resource List</div>
+                <div class="subnavbar">
+                    <form class="searchbar">
+                        <div class="searchbar-inner">
+                            <div class="searchbar-input-wrap">
+                                <input type="search" placeholder="Search">
+                                <i class="searchbar-icon"></i>
+                                <span class="input-clear-button"></span>
+                            </div>
+                            <span class="searchbar-disable-button if-not-aurora">Cancel</span>
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
 
         <div class="page-content">
 
-            <div class="block block-strong">
-                <p>Select from the existing resource groups to view more details. A new page will open that can be shared with the resource owner.</p>
-            </div>
+            <div class="searchbar-backdrop"></div>
 
-            <div class="list links-list">
+            <div class="list searchbar-found">
                 <ul>
                     {{#each groups}}
-                        <li>
-                            <a class="link external" href="/{{this}}/admin" target="_blank">
-                                {{this}}
+                    <li class="swipeout">
+                        <div class="swipeout-content">
+                            <a href="/{{this}}/admin" target="_blank" class="item-link item-content external">
+                                <div class="item-inner">
+                                    <div class="item-title">{{this}}</div>
+                                </div>
                             </a>
-                        </li>
+                        </div>
+                        <div class="swipeout-actions-right">
+                            <a href="#" data-confirm="Are you sure you want to delete this?" class="swipeout-delete">Delete</a>
+                        </div>
+                    </li>
                     {{/each}}
                 </ul>
             </div>
-            
+
+            <div class="block searchbar-not-found">
+                <div class="block-inner">No results</div>
+            </div>
+
         </div>
 
     </div>
@@ -47,13 +68,27 @@
         },
         on: {
             pageInit: function (e, page) {
+                
                 var self = this;
                 var app = self.$app;
+                
                 app.request.get('groups', function (data) {
                     self.$setState({
                         groups: JSON.parse(data)
                     });
                 });
+
+                $$('.list').on('swipeout:delete', function (ev) {
+                    var toDelete = ev.target.querySelector(".item-title").innerText;
+                    app.request.post(toDelete + '/delete');
+                });
+
+                var searchbar = app.searchbar.create({
+                    el: '.searchbar',
+                    searchContainer: '.list',
+                    searchIn: '.item-title'
+                });
+
             }
         }
     }

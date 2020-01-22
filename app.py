@@ -100,6 +100,14 @@ def deploy(template):
 	deployment_async_operation.wait()
 	return '', 200
 
+@app.route('/<resource_group>/delete', methods=['POST'])
+@admin_required
+def delete(resource_group):
+	"""Delete resource group"""
+	async_rg_delete = resource_client.resource_groups.delete(resource_group)
+	async_rg_delete.wait()
+	return '', 200
+
 @app.route('/<resource_group>/admin', methods=['GET'])
 @auth_required(resource_client)
 def resource(resource_group):

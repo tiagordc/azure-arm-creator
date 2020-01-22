@@ -11,20 +11,30 @@
                     </a>
                 </div>
                 <div class="title">New Resource</div>
+                <div class="subnavbar">
+                    <form class="searchbar">
+                        <div class="searchbar-inner">
+                            <div class="searchbar-input-wrap">
+                                <input type="search" placeholder="Search">
+                                <i class="searchbar-icon"></i>
+                                <span class="input-clear-button"></span>
+                            </div>
+                            <span class="searchbar-disable-button if-not-aurora">Cancel</span>
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
 
         <div class="page-content">
 
-            <div class="block block-strong">
-                <p>Select from the available templates to create a new resource group.</p>
-            </div>
+            <div class="searchbar-backdrop"></div>
 
-            <div class="list links-list">
+            <div class="list links-list searchbar-found">
                 <ul>
                     {{#each templates}}
                         <li>
-                            <a href="/admin/{{this.path}}/{{this.name}}/" style="justify-content: inherit;">
+                            <a href="/admin/{{this.path}}/{{this.name}}/" style="justify-content: inherit;" class="item-title">
                                 <img style="height: 32px; width: 32px; margin-right: 10px;" src="template/{{this.path}}/icon">
                                 {{this.name}}
                             </a>
@@ -33,6 +43,10 @@
                 </ul>
             </div>
             
+            <div class="block searchbar-not-found">
+                <div class="block-inner">No results</div>
+            </div>
+
         </div>
 
     </div>
@@ -48,13 +62,22 @@
         },
         on: {
             pageInit: function (e, page) {
+
                 var self = this;
                 var app = self.$app;
+
                 app.request.get('templates', function (data) {
                     self.$setState({
                         templates: JSON.parse(data)
                     });
                 });
+
+                var searchbar = app.searchbar.create({
+                    el: '.searchbar',
+                    searchContainer: '.list',
+                    searchIn: '.item-title'
+                });
+
             }
         }
     }
