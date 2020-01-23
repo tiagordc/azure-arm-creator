@@ -5,6 +5,7 @@ from azure.common.credentials import ServicePrincipalCredentials
 from azure.mgmt.resource import ResourceManagementClient
 from azure.mgmt.compute import ComputeManagementClient
 from azure.mgmt.network import NetworkManagementClient
+from azure.mgmt.resource.resources.models import DeploymentMode
 from auth import admin_required, auth_required
 from PIL import Image
 
@@ -89,8 +90,9 @@ def deploy(template):
 	"""Deploy a new resource group based on a template and some given parameters"""
 	parameters = request.get_json()
 	group_name = parameters['Resource_Group_Name']
-	user_name = parameters['Resource_Group_Admin']
-	user_password = parameters['Resource_Group_Password']
+	# user_name = parameters['Resource_Group_Admin']
+	# user_password = parameters['Resource_Group_Password']
+	# TODO: base 64 to tag
 	parameters = {k: {'value': v} for k, v in parameters.items() }
 	location = os.environ['AZURE_LOCATION']
 	resource_group_params = {'location':location}
