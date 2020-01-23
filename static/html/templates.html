@@ -12,7 +12,7 @@
                 </div>
                 <div class="title">New Resource</div>
                 <div class="subnavbar">
-                    <form class="searchbar">
+                    <form class="searchbar searchbar-init" data-search-container="#template-list" data-search-in=".item-title">
                         <div class="searchbar-inner">
                             <div class="searchbar-input-wrap">
                                 <input type="search" placeholder="Search">
@@ -30,7 +30,7 @@
 
             <div class="searchbar-backdrop"></div>
 
-            <div class="list links-list searchbar-found">
+            <div id="template-list" class="list links-list searchbar-found">
                 <ul>
                     {{#each templates}}
                         <li>
@@ -67,15 +67,7 @@
                 var app = self.$app;
 
                 app.request.get('templates', function (data) {
-                    self.$setState({
-                        templates: JSON.parse(data)
-                    });
-                });
-
-                var searchbar = app.searchbar.create({
-                    el: '.searchbar',
-                    searchContainer: '.list',
-                    searchIn: '.item-title'
+                    self.$setState({ templates: JSON.parse(data) });
                 });
 
             }

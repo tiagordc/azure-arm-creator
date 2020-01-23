@@ -12,7 +12,7 @@
                 </div>
                 <div class="title">Resource List</div>
                 <div class="subnavbar">
-                    <form class="searchbar">
+                    <form class="searchbar searchbar-init" data-search-container="#resource-list" data-search-in=".item-title">
                         <div class="searchbar-inner">
                             <div class="searchbar-input-wrap">
                                 <input type="search" placeholder="Search">
@@ -30,7 +30,7 @@
 
             <div class="searchbar-backdrop"></div>
 
-            <div class="list searchbar-found">
+            <div id="resource-list" class="list searchbar-found">
                 <ul>
                     {{#each groups}}
                     <li class="swipeout">
@@ -81,12 +81,6 @@
                 $$('.list').on('swipeout:delete', function (ev) {
                     var toDelete = ev.target.querySelector(".item-title").innerText;
                     app.request.post(toDelete + '/delete');
-                });
-
-                var searchbar = app.searchbar.create({
-                    el: '.searchbar',
-                    searchContainer: '.list',
-                    searchIn: '.item-title'
                 });
 
             }
