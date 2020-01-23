@@ -5,6 +5,14 @@
         <div class="navbar">
             <div class="navbar-bg"></div>
             <div class="navbar-inner sliding">
+                {{#if admin}}
+                <div class="left">
+                    <a href="#" class="link back">
+                        <i class="icon icon-back"></i>
+                        <span class="if-not-md">Back</span>
+                    </a>
+                </div>
+                {{/if}}
                 <div class="title">{{name}}</div>
             </div>
         </div>
@@ -58,11 +66,16 @@
 <script>
     return {
         data: function () {
-            return {
+
+            var result = {
+                admin: this.$app.id === 'com.arc.creator',
                 name: this.$route.params.name,
                 machines: [],
                 timer: null
-            }
+            };
+
+            return result;
+
         },
         methods: {
             startVm: function (ev) {
@@ -77,7 +90,7 @@
                 var vmIndex = parseInt(target.closest('.card').attributes["data-index"].value);
                 var element = self.machines[vmIndex];
                 
-                app.request.post(element.name + '/start');
+                app.request.post('../' + self.name + '/' + element.name + '/start');
 
                 var timeout = setTimeout(self.reload, 5000);
                 self.$setState({ timer: timeout });
@@ -95,7 +108,7 @@
                 var vmIndex = parseInt(target.closest('.card').attributes["data-index"].value);
                 var element = self.machines[vmIndex];
 
-                app.request.post(element.name + '/stop');
+                app.request.post('../' + self.name + '/' + element.name + '/stop');
 
                 var timeout = setTimeout(self.reload, 5000);
                 self.$setState({ timer: timeout });
@@ -138,7 +151,9 @@
                 var self = this;
                 var app = self.$app;
 
-                app.request.get('vms', null, function (data) {
+                if (typeof app === 'undefined') return;
+
+                app.request.get('../' + self.name + '/vms', null, function (data) {
                     
                     var machines = JSON.parse(data);
 
@@ -185,6 +200,9 @@
         on: {
             pageInit: function (e, page) {
                 this.reload();
+            },
+            pageAfterOut: function () {
+                clearTimeout(this.timer);
             }
         }
     }

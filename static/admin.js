@@ -19,7 +19,14 @@ var app = new Framework7({
     },
     {
       path: '/resources',
-      componentUrl: './static/html/resources.html'
+      componentUrl: './static/html/resources.html',
+      master: true,
+      detailRoutes: [
+        {
+          path: '/resources/:name/',
+          componentUrl: './static/html/resource.html'
+        }
+      ]
     }
   ]
 });
