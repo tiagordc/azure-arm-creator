@@ -7,6 +7,7 @@ from azure.mgmt.compute import ComputeManagementClient
 from azure.mgmt.network import NetworkManagementClient
 from azure.mgmt.resource.resources.models import DeploymentMode
 from auth import admin_required, auth_required
+from base64 import b64encode
 from PIL import Image
 
 app = Flask(__name__)
@@ -90,19 +91,20 @@ def deploy(template):
 	"""Deploy a new resource group based on a template and some given parameters"""
 	parameters = request.get_json()
 	group_name = parameters['Resource_Group_Name']
-	# user_name = parameters['Resource_Group_Admin']
-	# user_password = parameters['Resource_Group_Password']
-	# TODO: base 64 to tag
+	tags = {'created-by': os.environ['ARM_CREATED_TAG'] }
+	if 'Resource_Group_Admin' in parameters and 'Resource_Group_Password' in parameters:
+		userpass = parameters['Resource_Group_Admin'] + ":" + parameters['Resource_Group_Password']
+		tags[os.environ['ARM_AUTH_TAG']] = b64encode(userpass.encode())
 	parameters = {k: {'value': v} for k, v in parameters.items() }
 	location = os.environ['AZURE_LOCATION']
 	resource_group_params = {'location':location}
-	resource_group_params.update(tags={'created-by': os.environ['ARM_CREATED_TAG'] })
+	resource_group_params.update(tags=tags)
 	resource_client.resource_groups.create_or_update(group_name, resource_group_params)
 	template_path = os.path.join(os.path.dirname(__file__), template_folder, template, 'template.json')
 	with open(template_path, 'r') as template_file_fd:
 		template_file = load_json(template_file_fd)
 	deployment_properties = { 'mode': DeploymentMode.incremental, 'template': template_file, 'parameters': parameters }
-	deployment_async_operation = resource_client.deployments.create_or_update(group_name, 'azure-sample', deployment_properties)
+	deployment_async_operation = resource_client.deployments.create_or_update(group_name, 'arm-deployment', deployment_properties)
 	deployment_async_operation.wait()
 	return '', 200
 
