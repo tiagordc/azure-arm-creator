@@ -18,7 +18,13 @@
         </div>
 
         <div class="page-content">
-            
+
+            {{#if admin}}
+            <div class="block block-strong">
+                <p>You can share this restricted view using the URL: <a href="{{url}}" class="link external" target="_blank">{{url}}</a></p>
+            </div>
+            {{/if}}
+
             {{#each machines}}
             <div class="card" data-index="{{@index}}">
                 <div class="card-header">{{header}}</div>
@@ -68,6 +74,7 @@
         data: function () {
 
             var result = {
+                url: (new URL('../' + this.$route.params.name + '/admin', window.location.href)).href,
                 admin: this.$app.id === 'com.arc.creator',
                 name: this.$route.params.name,
                 machines: [],
