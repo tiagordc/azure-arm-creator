@@ -4,6 +4,7 @@ var app = new Framework7({
   root: '#app',
   theme: "auto",
   name: 'Resource Creator',
+  cache: false,
   routes: [
     {
       path: '/admin',

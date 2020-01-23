@@ -4,6 +4,7 @@ var app = new Framework7({
   root: '#app',
   theme: "auto",
   name: 'Virtual Machines',
+  cache: false,
   routes: [
     {
       path: '/:name/admin',

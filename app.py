@@ -11,11 +11,15 @@ from PIL import Image
 app = Flask(__name__)
 
 template_folder = os.environ['ARM_TEMPLATE_FOLDER']
-credentials = ServicePrincipalCredentials(client_id=os.environ['AZURE_CLIENT_ID'], secret=os.environ['AZURE_CLIENT_SECRET'], tenant=os.environ['AZURE_TENANT_ID'])
-subscription_id = os.environ['AZURE_SUBSCRIPTION_ID']
-resource_client = ResourceManagementClient(credentials, subscription_id)
-compute_client = ComputeManagementClient(credentials, subscription_id)
-network_client = NetworkManagementClient(credentials, subscription_id)
+azure_subscription_id = os.environ['AZURE_SUBSCRIPTION_ID']
+azure_client_id = os.environ['AZURE_CLIENT_ID']
+azure_client_secret = os.environ['AZURE_CLIENT_SECRET']
+azure_tenant_id = os.environ['AZURE_TENANT_ID']
+
+credentials = ServicePrincipalCredentials(client_id=azure_client_id, secret=azure_client_secret, tenant=azure_tenant_id)
+resource_client = ResourceManagementClient(credentials, azure_subscription_id)
+compute_client = ComputeManagementClient(credentials, azure_subscription_id)
+network_client = NetworkManagementClient(credentials, azure_subscription_id)
 
 @app.route('/static/<path:path>', methods=['GET'])
 def static_files(path):
