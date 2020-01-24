@@ -1,4 +1,4 @@
-import os, re
+import os, re, time
 from json import load as load_json
 from flask import Flask, render_template, send_from_directory, send_file, jsonify, abort, request
 from azure.common.credentials import ServicePrincipalCredentials
@@ -167,6 +167,18 @@ def stop(resource_group, machine):
 def start(resource_group, machine):
 	async_vm_start = compute_client.virtual_machines.start(resource_group, machine)
 	async_vm_start.wait()
+	return '', 200
+
+@app.route('/<resource_group>/<machine>/scale/<size>', methods=['POST'])
+def scale_vm(resource_group, machine, size):
+	"""Scale VM to a given size"""
+	if size.startswith("B1"): # Hard coding B1 options only
+		vm = compute_client.virtual_machines.get(resource_group, machine)
+    	vm.hardware_profile.vm_size = size
+    	update_result = compute_client.virtual_machines.create_or_update(resource_group, machine, vm)
+		update_result.wait()
+	else:
+		time.sleep(30)
 	return '', 200
 
 if __name__ == '__main__':

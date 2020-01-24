@@ -1,5 +1,5 @@
-# Usage:
-# powershell -ExecutionPolicy Unrestricted -File Win10Lock.ps1 -zipDownload "https://...." -zipFolder "C:\Custom" -packages "soapui,putty.install" -userName "customer" -userPass "password" -onComplete "https://...."
+# Simple Windows 10 machine with a single floder to download and to create a shortcut on the desktop. Allows custom packages and homepage.
+# powershell -ExecutionPolicy Unrestricted -File Win10Lock.ps1 -zipDownload "https://...." -zipFolder "C:\Custom" -packages "soapui,putty.install" -userName "customer" -userPass "password" -homePage "https://....." -reportComplete "https://...."
 
 param (
 	[string]$zipDownload,
@@ -7,7 +7,8 @@ param (
 	[string]$packages,
 	[string]$userName,
 	[string]$userPass,
-	[string]$onComplete
+	[string]$homePage,
+	[string]$reportComplete
 )
 
 # Create user
@@ -16,12 +17,45 @@ if ($userName) {
 	Add-LocalGroupMember -Group "Remote Desktop Users" -Member $userName
 }
 
-# Download Zip File - TODO: to array
+# Install Chrome
+Set-ExecutionPolicy Bypass -Scope Process -Force; iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))
+choco feature enable -n allowGlobalConfirmation
+choco install googlechrome
+
+if ($homePage) {
+	$regkey = "HKLM:\SOFTWARE\Policies\Google"
+	if (!(Test-Path $regkey)) {New-Item -Path $regkey -force}
+	$regkey = "HKLM:\SOFTWARE\Policies\Google\Chrome"
+	if (!(Test-Path $regkey)) {New-Item -Path $regkey -force}
+	New-ItemProperty -Path $regkey -Name "PasswordManagerEnabled" -Value 0 -PropertyType Dword -Force
+	New-ItemProperty -Path $regkey -Name "RestoreOnStartup " -Value 4 -PropertyType Dword -Force
+	New-ItemProperty -Path $regkey -Name "HomepageLocation" -Value $homePage -PropertyType String -Force
+	New-ItemProperty -Path $regkey -Name "HomepageIsNewTabPage" -Value 0 -PropertyType Dword -Force
+}
+
+# Install additional tools
+if ($packages) {
+	$packages.Split(",")  | ForEach {
+		choco install $_
+	}
+}
+
+# Download Zip File
 New-Item -ItemType Directory -Force -Path $zipFolder
 $zipPath = $zipFolder + '\_TEMP_.zip'
 Invoke-WebRequest $zipDownload -OutFile $zipPath
 Expand-Archive -LiteralPath $zipPath -DestinationPath $zipFolder
 Remove-Item $zipPath
+
+# Create shortcut to folder
+$shortcut = (Get-Item -Path $zipFolder).Name
+$dir = dir c:\users | ?{$_.PSISContainer}
+foreach ($d in $dir){
+	$desktop = "C:\Users\" + $d.Name + "\Desktop"
+	$lnk = $wshshell.CreateShortcut($desktop + "\" + $shortcut + ".lnk")
+	$lnk.TargetPath = $zipFolder
+	$lnk.Save()
+}
 
 #https://pastebin.com/kRwyDJMU
 
@@ -126,21 +160,23 @@ Get-ScheduledTask  DmClientOnScenarioDownload | Disable-ScheduledTask
 Stop-Service "DiagTrack"
 Set-Service "DiagTrack" -StartupType Disabled
 
-# Disable Microsoft Edge's 'First Run'
-$regkey = "HKLM:\SOFTWARE\Policies\Microsoft\MicrosoftEdge"
+# Disable Edge first run
+$regkey = "HKLM:\SOFTWARE\Policies\Microsoft\MicrosoftEdge\Main"
 if (!(Test-Path $regkey)) {New-Item -Path $regkey -force}
 New-ItemProperty -Path $regkey -Name "PreventFirstRunPage" -Value 1 -PropertyType Dword -Force
 
-# Install Tools
-if ($packages) {
-	Set-ExecutionPolicy Bypass -Scope Process -Force; iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))
-	choco feature enable -n allowGlobalConfirmation
-	$packages.Split(",")  | ForEach {
-		choco install $_
-	}
-}
+# Disable Firewall
+$regkey = "HKLM:\SOFTWARE\Policies\Microsoft\WindowsFirewall\StandardProfile"
+if (!(Test-Path $regkey)) {New-Item -Path $regkey -force}
+New-ItemProperty -Path $regkey -Name "EnableFirewall" -Value 0 -PropertyType Dword -Force
+
+# Disable Windows Defender
+$regkey = "HKLM:\SOFTWARE\Policies\Microsoft\Windows Defender"
+if (!(Test-Path $regkey)) {New-Item -Path $regkey -force}
+New-ItemProperty -Path $regkey -Name "DisableAntiSpyware" -Value 1 -PropertyType Dword -Force
+Remove-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Run" -Name "SecurityHealth" -ErrorAction SilentlyContinue
 
 # Complete - use to down size this VM for example
-if ($onComplete) {
-	Invoke-WebRequest -Uri $onComplete -Method POST -UseBasicParsing
+if ($reportComplete) {
+	Invoke-WebRequest -Uri $reportComplete -Method POST -UseBasicParsing
 }
