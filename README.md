@@ -23,11 +23,14 @@ Developed with minimum possible assets to work on an iPad to demonstrate the pro
  * templates
     * admin.html - Template creation page
     * resource.html - Resource group administration page
-    
+
+ * automation - PowerShell and bash scripts to run as [CustomScriptExtension](https://docs.microsoft.com/en-us/azure/virtual-machines/extensions/custom-script-windows)
+
  * .env - environment configuration with [azure authentication](https://docs.microsoft.com/en-us/azure/azure-resource-manager/resource-group-create-service-principal-portal#get-application-id-and-authentication-key)
  * app.py - API endpoints
  * auth.py - Authentication decorators
- 
+ * utils.py - Generic utilities
+
  ### ARM references
 
  * [Functions](https://docs.microsoft.com/en-us/azure/azure-resource-manager/templates/template-functions)

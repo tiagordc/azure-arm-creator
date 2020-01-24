@@ -2,7 +2,7 @@
 param (
 	[string]$zipDownload,
 	[string]$zipFolder,
-    [string[]]$packages,
+	[string[]]$packages,
 	[string]$userName,
 	[string]$userPass,
 	[string]$onComplete
