@@ -7,8 +7,8 @@ from azure.mgmt.compute import ComputeManagementClient
 from azure.mgmt.network import NetworkManagementClient
 from azure.mgmt.resource.resources.models import DeploymentMode
 from auth import admin_required, auth_required
+from utils import icon_for_template
 from base64 import b64encode
-from PIL import Image
 
 app = Flask(__name__)
 
@@ -41,17 +41,13 @@ def templates():
 	result = []
 	for root, dirs, files in os.walk(template_folder):
 		if root.startswith(template_folder) and "template.json" in files:
-			for filepath in files:
-				if filepath.endswith(".png") or filepath.endswith(".jpg"):
-					with Image.open(os.path.join(root, filepath)) as img:
-						width, height = img.size
-						if width == height and width == 256:
-							template_image = filepath
-							break
+			template_path = root[len(template_folder)+1:]
+			template_image = icon_for_template(template_folder, template_path)
 			if template_image == None:
 				break
+			template_image = os.path.basename(template_image)
 			item_name, img_ext = os.path.splitext(template_image)
-			item = { "name": item_name, "path": root[len(template_folder)+1:] }
+			item = { "name": item_name, "path": template_path }
 			result.append(item)
 	return jsonify(result)
 
@@ -75,14 +71,9 @@ def parameters(template):
 @app.route('/template/<template>/icon', methods=['GET'])
 def icon(template):
 	"""Get template icon"""
-	template_path = os.path.join(os.path.dirname(__file__), template_folder, template)
-	for root, dirs, files in os.walk(template_path):
-		for filepath in files:
-			if filepath.endswith(".png"):
-				with Image.open(os.path.join(root, filepath)) as img:
-					width, height = img.size
-					if width == height and width == 256:
-						return send_file(os.path.join(template_path, filepath))
+	icon = icon_for_template(template_folder, template)
+	if icon:
+		return send_file(icon)
 	abort(404)
 
 @app.route('/template/<template>/deploy', methods=['POST'])
