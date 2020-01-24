@@ -6,6 +6,8 @@ Each template will create a resource group in Azure and a management area within
 
 Uses basic authentication using decorators so any other logic can be used instead.
 
+There is no database involved, all properties are stored as resource tags on azure.
+
 Developed with minimum possible assets to work on an iPad to demonstrate the proof of concept.
 
 ## Project structure

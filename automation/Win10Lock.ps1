@@ -10,7 +10,11 @@ param (
 	[string]$onComplete
 )
 
-#https://pastebin.com/kRwyDJMU
+# Create user
+if ($userName) {
+	New-LocalUser -Name $userName -Password ($userPass | ConvertTo-SecureString -AsPlainText -Force)
+	Add-LocalGroupMember -Group "Remote Desktop Users" -Member $userName
+}
 
 # Download Zip File - TODO: to array
 New-Item -ItemType Directory -Force -Path $zipFolder
@@ -18,6 +22,8 @@ $zipPath = $zipFolder + '\_TEMP_.zip'
 Invoke-WebRequest $zipDownload -OutFile $zipPath
 Expand-Archive -LiteralPath $zipPath -DestinationPath $zipFolder
 Remove-Item $zipPath
+
+#https://pastebin.com/kRwyDJMU
 
 # Disable "Choose Privacy Settings."
 $regkey = "HKLM:\SOFTWARE\Policies\Microsoft\Windows\OOBE"
@@ -119,7 +125,12 @@ Get-ScheduledTask  DmClientOnScenarioDownload | Disable-ScheduledTask
 # Disabling the Diagnostics Tracking Service
 Stop-Service "DiagTrack"
 Set-Service "DiagTrack" -StartupType Disabled
- 
+
+# Disable Microsoft Edge's 'First Run'
+$regkey = "HKLM:\SOFTWARE\Policies\Microsoft\MicrosoftEdge"
+if (!(Test-Path $regkey)) {New-Item -Path $regkey -force}
+New-ItemProperty -Path $regkey -Name "PreventFirstRunPage" -Value 1 -PropertyType Dword -Force
+
 # Install Tools
 if ($packages) {
 	Set-ExecutionPolicy Bypass -Scope Process -Force; iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))
@@ -127,11 +138,6 @@ if ($packages) {
 	$packages.Split(",")  | ForEach {
 		choco install $_
 	}
-}
-
-# Create user
-if ($userName) {
-	New-LocalUser -Name $userName -Password ($userPass | ConvertTo-SecureString -AsPlainText -Force)
 }
 
 # Complete - use to down size this VM for example

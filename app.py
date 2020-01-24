@@ -103,6 +103,7 @@ def deploy(template):
 @admin_required
 def delete(resource_group):
 	"""Delete resource group"""
+	# TODO: remove tags first so the rg doesnt popup on the list
 	async_rg_delete = resource_client.resource_groups.delete(resource_group)
 	async_rg_delete.wait()
 	return '', 200
