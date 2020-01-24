@@ -1,8 +1,10 @@
+# Usage:
+# powershell -ExecutionPolicy Unrestricted -File Win10Lock.ps1 -zipDownload "https://...." -zipFolder "C:\Custom" -packages "soapui,putty.install" -userName "customer" -userPass "password" -onComplete "https://...."
 
 param (
 	[string]$zipDownload,
 	[string]$zipFolder,
-	[string[]]$packages,
+	[string]$packages,
 	[string]$userName,
 	[string]$userPass,
 	[string]$onComplete
@@ -119,12 +121,20 @@ Stop-Service "DiagTrack"
 Set-Service "DiagTrack" -StartupType Disabled
  
 # Install Tools
-Set-ExecutionPolicy Bypass -Scope Process -Force; iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))
-choco feature enable -n allowGlobalConfirmation
-
-foreach ($package in $packages) {
-    choco install $package
+if ($packages) {
+	Set-ExecutionPolicy Bypass -Scope Process -Force; iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))
+	choco feature enable -n allowGlobalConfirmation
+	$packages.Split(",")  | ForEach {
+		choco install $_
+	}
 }
 
-# Complete
-# call onDone
+# Create user
+if ($userName) {
+	New-LocalUser -Name $userName -Password ($userPass | ConvertTo-SecureString -AsPlainText -Force)
+}
+
+# Complete - use to down size this VM for example
+if ($onComplete) {
+	Invoke-WebRequest -Uri $onComplete -Method POST -UseBasicParsing
+}
