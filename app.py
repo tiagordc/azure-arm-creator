@@ -66,7 +66,10 @@ def parameters(template):
 	template_path = os.path.join(os.path.dirname(__file__), template_folder, template, 'template.json')
 	with open(template_path, 'r') as template_file_fd:
 		template_file = load_json(template_file_fd)
-	return jsonify(template_file['parameters'])
+	parameters = template_file['parameters']
+	if 'Server_URL' in parameters:
+		del parameters['Server_URL'] 
+	return jsonify(parameters)
 
 @app.route('/template/<template>/icon', methods=['GET'])
 def icon(template):
@@ -81,6 +84,7 @@ def icon(template):
 def deploy(template):
 	"""Deploy a new resource group based on a template and some given parameters"""
 	parameters = request.get_json()
+	parameters['Server_URL'] = request.url_root
 	group_name = parameters['Resource_Group_Name']
 	tags = {'created-by': os.environ['ARM_CREATED_TAG'] }
 	if 'Resource_Group_Admin' in parameters and 'Resource_Group_Password' in parameters:
@@ -89,7 +93,6 @@ def deploy(template):
 	parameters = {k: {'value': v} for k, v in parameters.items() }
 	location = os.environ['AZURE_LOCATION']
 	resource_group_params = {'location':location}
-	resource_group_params.update(tags=tags)
 	resource_client.resource_groups.create_or_update(group_name, resource_group_params)
 	template_path = os.path.join(os.path.dirname(__file__), template_folder, template, 'template.json')
 	with open(template_path, 'r') as template_file_fd:
@@ -97,13 +100,18 @@ def deploy(template):
 	deployment_properties = { 'mode': DeploymentMode.incremental, 'template': template_file, 'parameters': parameters }
 	deployment_async_operation = resource_client.deployments.create_or_update(group_name, 'arm-deployment', deployment_properties)
 	deployment_async_operation.wait()
+	resource_group_params.update(tags=tags)
+	resource_client.resource_groups.update(group_name, resource_group_params)
 	return '', 200
 
 @app.route('/<resource_group>/delete', methods=['POST'])
 @admin_required
 def delete(resource_group):
 	"""Delete resource group"""
-	# TODO: remove tags first so the rg doesnt popup on the list
+	group = resource_client.resource_groups.get(resource_group)
+	resource_group_params = {'location': group.location}
+	resource_group_params.update(tags={})
+	resource_client.resource_groups.update(resource_group, resource_group_params)
 	async_rg_delete = resource_client.resource_groups.delete(resource_group)
 	async_rg_delete.wait()
 	return '', 200
@@ -148,16 +156,10 @@ def machines(resource_group):
 		result.append({ "name": vm.name, "status": vm_power, "public": vm_public_ips, "private": vm_private_ips, "admin": vm_admin, "tags": vm.tags, "os": vm_os })
 	return jsonify(result)
 
-@app.route('/<resource_group>/<machine>/restart', methods=['POST'])
-@auth_required(resource_client)
-def restart(resource_group, machine):
-	async_vm_restart = compute_client.virtual_machines.restart(resource_group, machine)
-	async_vm_restart.wait()
-	return '', 200
-
 @app.route('/<resource_group>/<machine>/stop', methods=['POST'])
 @auth_required(resource_client)
 def stop(resource_group, machine):
+	"""Stop VM to an deallocated state"""
 	async_vm_deallocate = compute_client.virtual_machines.deallocate(resource_group, machine)
 	async_vm_deallocate.wait()
 	return '', 200
@@ -165,6 +167,7 @@ def stop(resource_group, machine):
 @app.route('/<resource_group>/<machine>/start', methods=['POST'])
 @auth_required(resource_client)
 def start(resource_group, machine):
+	"""Start VM"""
 	async_vm_start = compute_client.virtual_machines.start(resource_group, machine)
 	async_vm_start.wait()
 	return '', 200
@@ -174,8 +177,8 @@ def scale_vm(resource_group, machine, size):
 	"""Scale VM to a given size"""
 	if size.startswith("B1"): # Hard coding B1 options only
 		vm = compute_client.virtual_machines.get(resource_group, machine)
-    	vm.hardware_profile.vm_size = size
-    	update_result = compute_client.virtual_machines.create_or_update(resource_group, machine, vm)
+		vm.hardware_profile.vm_size = size
+		update_result = compute_client.virtual_machines.create_or_update(resource_group, machine, vm)
 		update_result.wait()
 	else:
 		time.sleep(30)

@@ -1,15 +1,6 @@
-# Simple Windows 10 machine with a single floder to download and to create a shortcut on the desktop. Allows custom packages and homepage.
-# powershell -ExecutionPolicy Unrestricted -File Win10Lock.ps1 -zipDownload "https://...." -zipFolder "C:\Custom" -packages "soapui,putty.install" -userName "customer" -userPass "password" -homePage "https://....." -reportComplete "https://...."
+# powershell -ExecutionPolicy Unrestricted -File Win10Lock.ps1 -fromUrl "https://...." -zipDownload "https://...." -zipFolder "C:\Custom" -packages "soapui,putty.install" -userName "customer" -userPass "password"
 
-param (
-	[string]$zipDownload,
-	[string]$zipFolder,
-	[string]$packages,
-	[string]$userName,
-	[string]$userPass,
-	[string]$homePage,
-	[string]$reportComplete
-)
+param ([string]$fromUrl, [string]$zipDownload, [string]$zipFolder, [string]$packages, [string]$userName, [string]$userPass)
 
 # Create user
 if ($userName) {
@@ -17,21 +8,9 @@ if ($userName) {
 	Add-LocalGroupMember -Group "Remote Desktop Users" -Member $userName
 }
 
-# Install Chrome
+# Install Chocolatey
 Set-ExecutionPolicy Bypass -Scope Process -Force; iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))
 choco feature enable -n allowGlobalConfirmation
-choco install googlechrome
-
-if ($homePage) {
-	$regkey = "HKLM:\SOFTWARE\Policies\Google"
-	if (!(Test-Path $regkey)) {New-Item -Path $regkey -force}
-	$regkey = "HKLM:\SOFTWARE\Policies\Google\Chrome"
-	if (!(Test-Path $regkey)) {New-Item -Path $regkey -force}
-	New-ItemProperty -Path $regkey -Name "PasswordManagerEnabled" -Value 0 -PropertyType Dword -Force
-	New-ItemProperty -Path $regkey -Name "RestoreOnStartup " -Value 4 -PropertyType Dword -Force
-	New-ItemProperty -Path $regkey -Name "HomepageLocation" -Value $homePage -PropertyType String -Force
-	New-ItemProperty -Path $regkey -Name "HomepageIsNewTabPage" -Value 0 -PropertyType Dword -Force
-}
 
 # Install additional tools
 if ($packages) {
@@ -47,17 +26,12 @@ Invoke-WebRequest $zipDownload -OutFile $zipPath
 Expand-Archive -LiteralPath $zipPath -DestinationPath $zipFolder
 Remove-Item $zipPath
 
-# Create shortcut to folder
-$shortcut = (Get-Item -Path $zipFolder).Name
-$dir = dir c:\users | ?{$_.PSISContainer}
-foreach ($d in $dir){
-	$desktop = "C:\Users\" + $d.Name + "\Desktop"
-	$lnk = $wshshell.CreateShortcut($desktop + "\" + $shortcut + ".lnk")
-	$lnk.TargetPath = $zipFolder
-	$lnk.Save()
+# Run final script
+$scriptFile = $zipFolder + "\PRE_EXECUTE.ps1"
+if (Test-Path $scriptFile) {
+	&$scriptFile -fromUrl $fromUrl -zipDownload $zipDownload -zipFolder $zipFolder -packages $packages -userName $userName -userPass $userPass
+	Remove-Item $scriptFile
 }
-
-#https://pastebin.com/kRwyDJMU
 
 # Disable "Choose Privacy Settings."
 $regkey = "HKLM:\SOFTWARE\Policies\Microsoft\Windows\OOBE"
@@ -176,7 +150,9 @@ if (!(Test-Path $regkey)) {New-Item -Path $regkey -force}
 New-ItemProperty -Path $regkey -Name "DisableAntiSpyware" -Value 1 -PropertyType Dword -Force
 Remove-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Run" -Name "SecurityHealth" -ErrorAction SilentlyContinue
 
-# Complete - use to down size this VM for example
-if ($reportComplete) {
-	Invoke-WebRequest -Uri $reportComplete -Method POST -UseBasicParsing
+# Run final script
+$scriptFile = $zipFolder + "\POST_EXECUTE.ps1"
+if (Test-Path $scriptFile) {
+	&$scriptFile -fromUrl $fromUrl -zipDownload $zipDownload -zipFolder $zipFolder -packages $packages -userName $userName -userPass $userPass
+	Remove-Item $scriptFile
 }
