@@ -89,9 +89,7 @@
                             text: formData.Resource_Group_Name + ' has been created',
                             closeButton: true,
                             on: {
-                                closed: function () {
-                                    notif.destroy();
-                                }
+                                closed: function () { notif.destroy(); }
                             }
                         });
                         notif.open();

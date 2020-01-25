@@ -1,6 +1,13 @@
-# powershell -ExecutionPolicy Unrestricted -File Win10Lock.ps1 -fromUrl "https://...." -zipDownload "https://...." -zipFolder "C:\Custom" -packages "soapui,putty.install" -userName "customer" -userPass "password"
+# powershell -ExecutionPolicy Unrestricted -File Win10Lock.ps1 -fromUrl "https://...." -resourceGroup "" -zipDownload "https://...." -zipFolder "C:\Custom" -packages "soapui,putty.install" -userName "customer" -userPass "password"
 
-param ([string]$fromUrl, [string]$zipDownload, [string]$zipFolder, [string]$packages, [string]$userName, [string]$userPass)
+param ([string]$fromUrl, [string]$resourceGroup, [string]$zipDownload, [string]$zipFolder, [string]$packages, [string]$userName, [string]$userPass)
+
+# Run initial script
+$scriptFile = $zipFolder + "\PRE_EXECUTE.ps1"
+if (Test-Path $scriptFile) {
+	&$scriptFile -fromUrl $fromUrl -resourceGroup $resourceGroup -zipDownload $zipDownload -zipFolder $zipFolder -packages $packages -userName $userName -userPass $userPass
+	Remove-Item $scriptFile
+}
 
 # Create user
 if ($userName) {
@@ -25,13 +32,6 @@ $zipPath = $zipFolder + '\_TEMP_.zip'
 Invoke-WebRequest $zipDownload -OutFile $zipPath
 Expand-Archive -LiteralPath $zipPath -DestinationPath $zipFolder
 Remove-Item $zipPath
-
-# Run final script
-$scriptFile = $zipFolder + "\PRE_EXECUTE.ps1"
-if (Test-Path $scriptFile) {
-	&$scriptFile -fromUrl $fromUrl -zipDownload $zipDownload -zipFolder $zipFolder -packages $packages -userName $userName -userPass $userPass
-	Remove-Item $scriptFile
-}
 
 # Disable "Choose Privacy Settings."
 $regkey = "HKLM:\SOFTWARE\Policies\Microsoft\Windows\OOBE"
@@ -153,6 +153,6 @@ Remove-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Run" 
 # Run final script
 $scriptFile = $zipFolder + "\POST_EXECUTE.ps1"
 if (Test-Path $scriptFile) {
-	&$scriptFile -fromUrl $fromUrl -zipDownload $zipDownload -zipFolder $zipFolder -packages $packages -userName $userName -userPass $userPass
+	&$scriptFile -fromUrl $fromUrl -resourceGroup $resourceGroup -zipDownload $zipDownload -zipFolder $zipFolder -packages $packages -userName $userName -userPass $userPass
 	Remove-Item $scriptFile
 }
