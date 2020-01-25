@@ -136,8 +136,8 @@ Set-Service "DiagTrack" -StartupType Disabled
 
 # Disable Edge first run
 $regkey = "HKLM:\SOFTWARE\Policies\Microsoft\MicrosoftEdge\Main"
-if (!(Test-Path $regkey)) {New-Item -Path $regkey -force}
-New-ItemProperty -Path $regkey -Name "PreventFirstRunPage" -Value 1 -PropertyType Dword -Force
+if (!(Test-Path $regkey)) {New-Item -Path $regkey -ItemType Directory -force}
+New-ItemProperty -Path $regkey -Name "PreventFirstRunPage" -PropertyType Dword -Value 1 -Force
 
 # Disable Firewall
 $regkey = "HKLM:\SOFTWARE\Policies\Microsoft\WindowsFirewall\StandardProfile"

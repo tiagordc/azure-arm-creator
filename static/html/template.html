@@ -83,7 +83,20 @@
 
                 self.el.querySelector("#deploy").onclick = () => {
                     var formData = app.form.convertToData('#my-form');
-                    app.request.postJSON('template/' + path + '/deploy', formData);
+                    app.request.postJSON('template/' + path + '/deploy', formData, function() {
+                        var notif = app.notification.create({
+                            icon: '<i class="icon demo-icon">7</i>',
+                            title: 'Created',
+                            text: 'The resource has been created',
+                            closeButton: true,
+                            on: {
+                                closed: function () {
+                                    notif.destroy();
+                                }
+                            }
+                        });
+                        notif.open();
+                    });
                     page.router.back();
                 };
 
