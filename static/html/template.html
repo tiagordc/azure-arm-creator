@@ -83,17 +83,22 @@
 
                 self.el.querySelector("#deploy").onclick = () => {
                     var formData = app.form.convertToData('#my-form');
-                    app.request.post('template/' + path + '/deploy', formData, function() {
-                        var notif = app.notification.create({
-                            title: 'Created',
-                            text: formData.Resource_Group_Name + ' has been created',
-                            closeButton: true,
-                            on: {
-                                closed: function () { notif.destroy(); }
-                            }
-                        });
-                        notif.open();
-                    });
+                    var xhr = new XMLHttpRequest();
+                    xhr.open('POST', 'template/' + path + '/deploy');
+                    xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+                    xhr.onload = function () {
+                        if (xhr.status === 200) {
+                            var notif = app.notification.create({
+                                text: formData.Resource_Group_Name + ' has been successfully created',
+                                closeButton: true,
+                                on: {
+                                    closed: function () { notif.destroy(); }
+                                }
+                            });
+                            notif.open();
+                        }
+                    };
+                    xhr.send(JSON.stringify(formData));
                     page.router.back();
                 };
 
