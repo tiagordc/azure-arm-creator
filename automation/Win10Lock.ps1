@@ -1,13 +1,15 @@
-# powershell -ExecutionPolicy Unrestricted -File Win10Lock.ps1 -fromUrl "https://...." -resourceGroup "" -zipDownload "https://...." -zipFolder "C:\Custom" -packages "soapui,putty.install" -userName "customer" -userPass "password"
+# powershell -ExecutionPolicy Unrestricted -File Win10Lock.ps1 -log 1 -fromUrl "https://...." -resourceGroup "" -zipDownload "https://...." -zipFolder "C:\Custom" -packages "soapui,putty.install" -userName "customer" -userPass "password"
 
-param ([string]$fromUrl, [string]$resourceGroup, [string]$zipDownload, [string]$zipFolder, [string]$packages, [string]$userName, [string]$userPass)
+param ([int]$log = 0, [string]$fromUrl, [string]$resourceGroup, [string]$zipDownload, [string]$zipFolder, [string]$packages, [string]$userName, [string]$userPass)
 
 New-Item -ItemType Directory -Force -Path $zipFolder
 
-$ErrorActionPreference="SilentlyContinue"
-Stop-Transcript | out-null
-$ErrorActionPreference = "Continue"
-Start-Transcript -path ($zipFolder + "\LOG.txt") -append
+if ($log -eq 1) {
+	$ErrorActionPreference="SilentlyContinue"
+	Stop-Transcript | out-null
+	$ErrorActionPreference = "Continue"
+	Start-Transcript -path ($zipFolder + "\LOG.txt") -append
+}
 
 # Download Zip File
 Write-Output "DOWNLOAD - Start"
@@ -175,4 +177,6 @@ else {
 	Write-Output "POST_EXECUTE - Missing"
 }
 
-Stop-Transcript
+if ($log -eq 1) {
+	Stop-Transcript
+}
