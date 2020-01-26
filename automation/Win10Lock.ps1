@@ -9,47 +9,60 @@ Stop-Transcript | out-null
 $ErrorActionPreference = "Continue"
 Start-Transcript -path ($zipFolder + "\LOG.txt") -append
 
+# Download Zip File
+Write-Output "DOWNLOAD - Start"
+$zipPath = $zipFolder + '\_TEMP_.zip'
+Invoke-WebRequest $zipDownload -OutFile $zipPath
+Expand-Archive -LiteralPath $zipPath -DestinationPath $zipFolder
+Remove-Item $zipPath
+
 # Run initial script
 $scriptFile = $zipFolder + "\PRE_EXECUTE.ps1"
 if (Test-Path $scriptFile) {
+	Write-Output "PRE_EXECUTE - Start"
 	&$scriptFile -fromUrl $fromUrl -resourceGroup $resourceGroup -zipDownload $zipDownload -zipFolder $zipFolder -packages $packages -userName $userName -userPass $userPass
+	Write-Output "PRE_EXECUTE - Done"
 	Remove-Item $scriptFile
+} else {
+	Write-Output "PRE_EXECUTE - Missing"
 }
 
 # Create user
 if ($userName) {
+	Write-Output "USER - Start"
 	New-LocalUser -Name $userName -Password ($userPass | ConvertTo-SecureString -AsPlainText -Force)
 	Add-LocalGroupMember -Group "Remote Desktop Users" -Member $userName
 }
+else {
+	Write-Output "USER - Missing"
+}
 
 # Install Chocolatey
+Write-Output "CHOCOLATEY - Start"
 Set-ExecutionPolicy Bypass -Scope Process -Force; iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))
 choco feature enable -n allowGlobalConfirmation
 
 # Install additional tools
+Write-Output "CHOCOLATEY - Packages"
 if ($packages) {
 	$packages.Split(",")  | ForEach {
 		choco install $_
 	}
 }
 
-# Download Zip File
-$zipPath = $zipFolder + '\_TEMP_.zip'
-Invoke-WebRequest $zipDownload -OutFile $zipPath
-Expand-Archive -LiteralPath $zipPath -DestinationPath $zipFolder
-Remove-Item $zipPath
+# Windows 10 Lockdown
 
-# Disable "Choose Privacy Settings."
+Write-Output "LOCKDOWN - Choose Privacy Settings"
 $regkey = "HKLM:\SOFTWARE\Policies\Microsoft\Windows\OOBE"
 if (!(Test-Path $regkey)) {New-Item -Path $regkey -force}
 New-ItemProperty -Path $regkey -Name "DisablePrivacyExperience" -Value 1 -PropertyType Dword -Force
 
-# Disables Windows Feedback Experience
+Write-Output "LOCKDOWN - Disables Windows Feedback Experience"
 $regkey = "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\AdvertisingInfo"
 if (!(Test-Path $regkey)) {New-Item -Path $regkey -force}
 New-ItemProperty -Path $regkey -Name "Enabled" -Value 0 -PropertyType Dword -Force
 
-# Stops Cortana from being used as part of your Windows Search Function and Web Search in Start Menu
+Write-Output "LOCKDOWN - Stop Cortana"
 $regkey = "HKLM:\SOFTWARE\Policies\Microsoft\Windows\Windows Search"
 if (!(Test-Path $regkey)) {New-Item -Path $regkey -force}
 New-ItemProperty -Path $regkey -Name "AllowCortana" -Value 0 -PropertyType Dword -Force
@@ -66,12 +79,12 @@ $regkey = "HKCU:\SOFTWARE\Microsoft\InputPersonalization\TrainedDataStore"
 if (!(Test-Path $regkey)) {New-Item -Path $regkey -force}
 New-ItemProperty -Path $regkey -Name "HarvestContacts" -Value 0 -PropertyType Dword -Force
 
-# Stops the Windows Feedback Experience from sending anonymous data
+Write-Output "LOCKDOWN - Stops the Windows Feedback Experience"
 $regkey = "HKCU:\Software\Microsoft\Siuf\Rules"
 if (!(Test-Path $regkey)) {New-Item -Path $regkey -force}
 New-ItemProperty -Path $regkey -Name "PeriodInNanoSeconds" -Value 0 -PropertyType Dword -Force
 
-# Prevents bloatware applications from returning and removes Start Menu suggestions
+Write-Output "LOCKDOWN - Start Menu suggestions"
 $regkey = "HKLM:\SOFTWARE\Policies\Microsoft\Windows\CloudContent"
 if (!(Test-Path $regkey)) {New-Item -Path $regkey -force}
 New-ItemProperty -Path $regkey -Name "DisableWindowsConsumerFeatures" -Value 1 -PropertyType Dword -Force
@@ -84,12 +97,12 @@ New-ItemProperty -Path $regkey -Name "PreInstalledAppsEverEnabled" -Value 0 -Pro
 New-ItemProperty -Path $regkey -Name "SilentInstalledAppsEnabled" -Value 0 -PropertyType Dword -Force
 New-ItemProperty -Path $regkey -Name "SystemPaneSuggestionsEnabled" -Value 0 -PropertyType Dword -Force
 
-# Preping mixed Reality Portal for removal
+Write-Output "LOCKDOWN - Reality Portal"
 $regkey = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Holographic"
 if (!(Test-Path $regkey)) {New-Item -Path $regkey -force}
 New-ItemProperty -Path $regkey -Name "FirstRunSucceeded" -Value 0 -PropertyType Dword -Force
 
-# Disables Wi-fi Sense
+Write-Output "LOCKDOWN - Wi-fi Sense"
 $regkey = "HKLM:\SOFTWARE\Microsoft\PolicyManager\default\WiFi\AllowWiFiHotSpotReporting"
 if (!(Test-Path $regkey)) {New-Item -Path $regkey -force}
 New-ItemProperty -Path $regkey -Name "Value" -Value 0 -PropertyType Dword -Force
@@ -100,12 +113,12 @@ $regkey = "HKLM:\SOFTWARE\Microsoft\WcmSvc\wifinetworkmanager\config"
 if (!(Test-Path $regkey)) {New-Item -Path $regkey -force}
 New-ItemProperty -Path $regkey -Name "AutoConnectAllowedOEM" -Value 0 -PropertyType Dword -Force
 
-# Disables live tiles
+Write-Output "LOCKDOWN - Disables live tiles"
 $regkey = "HKCU:\SOFTWARE\Policies\Microsoft\Windows\CurrentVersion\PushNotifications"
 if (!(Test-Path $regkey)) {New-Item -Path $regkey -force}
 New-ItemProperty -Path $regkey -Name "NoTileApplicationNotification" -Value 1 -PropertyType Dword -Force
 
-# Turns off Data Collection via the AllowTelemtry key by changing it to 0
+Write-Output "LOCKDOWN - Turns off Data Collection"
 $regkey = "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\DataCollection"
 if (!(Test-Path $regkey)) {New-Item -Path $regkey -force}
 New-ItemProperty -Path $regkey -Name "AllowTelemetry" -Value 0 -PropertyType Dword -Force
@@ -116,7 +129,7 @@ $regkey = "HKLM:\SOFTWARE\Wow6432Node\Microsoft\Windows\CurrentVersion\Policies\
 if (!(Test-Path $regkey)) {New-Item -Path $regkey -force}
 New-ItemProperty -Path $regkey -Name "AllowTelemetry" -Value 0 -PropertyType Dword -Force
 
-# Disabling Location Tracking
+Write-Output "LOCKDOWN - Disabling Location Tracking"
 $regkey = "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Sensor\Overrides\{BFA794E4-F964-4FDB-90F6-51056BFE4B44}"
 if (!(Test-Path $regkey)) {New-Item -Path $regkey -force}
 New-ItemProperty -Path $regkey -Name "SensorPermissionState" -Value 0 -PropertyType Dword -Force
@@ -124,43 +137,42 @@ $regkey = "HKLM:\SYSTEM\CurrentControlSet\Services\lfsvc\Service\Configuration"
 if (!(Test-Path $regkey)) {New-Item -Path $regkey -force}
 New-ItemProperty -Path $regkey -Name "Status" -Value 0 -PropertyType Dword -Force
 
-# Disables People icon on Taskbar
+Write-Output "LOCKDOWN - Disables People icon on Taskbar"
 $regkey = "HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\People"
 if (!(Test-Path $regkey)) {New-Item -Path $regkey -force}
 New-ItemProperty -Path $regkey -Name "PeopleBand" -Value 0 -PropertyType Dword -Force
 
-# Disables scheduled tasks that are considered unnecessary
+Write-Output "LOCKDOWN - Disables scheduled tasks"
 Get-ScheduledTask  XblGameSaveTask | Disable-ScheduledTask
 Get-ScheduledTask  Consolidator | Disable-ScheduledTask 
 Get-ScheduledTask  UsbCeip | Disable-ScheduledTask
 Get-ScheduledTask  DmClient | Disable-ScheduledTask
 Get-ScheduledTask  DmClientOnScenarioDownload | Disable-ScheduledTask 
 
-# Disabling the Diagnostics Tracking Service
+Write-Output "LOCKDOWN - Disabling the Diagnostics Tracking Service"
 Stop-Service "DiagTrack"
 Set-Service "DiagTrack" -StartupType Disabled
 
-# Disable Edge first run
+Write-Output "LOCKDOWN - Disable Edge first run"
 $regkey = "HKLM:\SOFTWARE\Policies\Microsoft\MicrosoftEdge\Main"
 if (!(Test-Path $regkey)) {New-Item -Path $regkey -ItemType Directory -force}
 New-ItemProperty -Path $regkey -Name "PreventFirstRunPage" -PropertyType Dword -Value 1 -Force
 
-# Disable Firewall
+Write-Output "LOCKDOWN - Disable Firewall"
 $regkey = "HKLM:\SOFTWARE\Policies\Microsoft\WindowsFirewall\StandardProfile"
 if (!(Test-Path $regkey)) {New-Item -Path $regkey -force}
 New-ItemProperty -Path $regkey -Name "EnableFirewall" -Value 0 -PropertyType Dword -Force
 
-# Disable Windows Defender
-$regkey = "HKLM:\SOFTWARE\Policies\Microsoft\Windows Defender"
-if (!(Test-Path $regkey)) {New-Item -Path $regkey -force}
-New-ItemProperty -Path $regkey -Name "DisableAntiSpyware" -Value 1 -PropertyType Dword -Force
-Remove-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Run" -Name "SecurityHealth" -ErrorAction SilentlyContinue
-
 # Run final script
 $scriptFile = $zipFolder + "\POST_EXECUTE.ps1"
 if (Test-Path $scriptFile) {
+	Write-Output "POST_EXECUTE - Start"
 	&$scriptFile -fromUrl $fromUrl -resourceGroup $resourceGroup -zipDownload $zipDownload -zipFolder $zipFolder -packages $packages -userName $userName -userPass $userPass
+	Write-Output "POST_EXECUTE - Done"
 	Remove-Item $scriptFile
+}
+else {
+	Write-Output "POST_EXECUTE - Missing"
 }
 
 Stop-Transcript
