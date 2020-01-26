@@ -29,20 +29,22 @@ if (Test-Path $scriptFile) {
 	Write-Output "PRE_EXECUTE - Missing"
 }
 
+# Install Chocolatey
+Write-Output "CHOCOLATEY - Start"
+Set-ExecutionPolicy Bypass -Scope Process -Force; iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))
+choco feature enable -n allowGlobalConfirmation
+choco install sysinternals
+
 # Create user
 if ($userName) {
 	Write-Output "USER - Start"
 	New-LocalUser -Name $userName -Password ($userPass | ConvertTo-SecureString -AsPlainText -Force)
 	Add-LocalGroupMember -Group "Remote Desktop Users" -Member $userName
+	psexec -h -accepteula -u $userName -p $userPass cmd /c echo
 }
 else {
 	Write-Output "USER - Missing"
 }
-
-# Install Chocolatey
-Write-Output "CHOCOLATEY - Start"
-Set-ExecutionPolicy Bypass -Scope Process -Force; iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))
-choco feature enable -n allowGlobalConfirmation
 
 # Install additional tools
 Write-Output "CHOCOLATEY - Packages"
