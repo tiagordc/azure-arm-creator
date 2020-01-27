@@ -166,14 +166,20 @@ def stop(resource_group, machine):
 
 @app.route('/<resource_group>/<machine>/start', methods=['POST'])
 @auth_required(resource_client)
-def start(resource_group, machine):
+def vm_start(resource_group, machine):
 	"""Start VM"""
 	async_vm_start = compute_client.virtual_machines.start(resource_group, machine)
 	async_vm_start.wait()
 	return '', 200
 
+@app.route('/<resource_group>/<machine>/status/<status>', methods=['POST'])
+def vm_status(resource_group, machine, status):
+	"""Receives status from VM"""
+	print(resource_group + ' - ' + machine + ' is reporting status: ' + status)
+	return '', 200
+
 @app.route('/<resource_group>/<machine>/scale/<size>', methods=['POST'])
-def scale_vm(resource_group, machine, size):
+def vm_scale(resource_group, machine, size):
 	"""Scale VM to a given size"""
 	if size.startswith("B1"): # Hard coding B1 options only
 		vm = compute_client.virtual_machines.get(resource_group, machine)

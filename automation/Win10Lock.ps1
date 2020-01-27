@@ -1,10 +1,11 @@
-# powershell -ExecutionPolicy Unrestricted -File Win10Lock.ps1 -log 1 -fromUrl "https://...." -resourceGroup "" -zipDownload "https://...." -zipFolder "C:\Custom" -packages "soapui,putty.install" -userName "customer" -userPass "password"
 
-param ([int]$log = 0, [string]$fromUrl, [string]$resourceGroup, [string]$zipDownload, [string]$zipFolder, [string]$packages, [string]$userName, [string]$userPass)
+# powershell -ExecutionPolicy Unrestricted -File Win10Lock.ps1 -logLevel 1 -serviceUrl "https://...." -resourceGroup "" -vmName "" -zipDownload "https://...." -zipFolder "C:\Custom" -packages "soapui,putty.install" -userName "customer" -userPass "password"
+
+param ([int]$logLevel = 0, [string]$serviceUrl, [string]$resourceGroup, [string]$vmName, [string]$zipDownload, [string]$zipFolder, [string]$packages, [string]$userName, [string]$userPass)
 
 New-Item -ItemType Directory -Force -Path $zipFolder
 
-if ($log -eq 1) {
+if ($logLevel -eq 1) {
 	$ErrorActionPreference="SilentlyContinue"
 	Stop-Transcript | out-null
 	$ErrorActionPreference = "Continue"
@@ -22,7 +23,7 @@ Remove-Item $zipPath
 $scriptFile = $zipFolder + "\PRE_EXECUTE.ps1"
 if (Test-Path $scriptFile) {
 	Write-Output "PRE_EXECUTE - Start"
-	&$scriptFile -fromUrl $fromUrl -resourceGroup $resourceGroup -zipDownload $zipDownload -zipFolder $zipFolder -packages $packages -userName $userName -userPass $userPass
+	&$scriptFile -serviceUrl $serviceUrl -resourceGroup $resourceGroup -vmName $vmName -zipDownload $zipDownload -zipFolder $zipFolder -packages $packages -userName $userName -userPass $userPass
 	Write-Output "PRE_EXECUTE - Done"
 	Remove-Item $scriptFile
 } else {
@@ -33,7 +34,7 @@ if (Test-Path $scriptFile) {
 Write-Output "CHOCOLATEY - Start"
 Set-ExecutionPolicy Bypass -Scope Process -Force; iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))
 choco feature enable -n allowGlobalConfirmation
-choco install sysinternals
+choco install sysinternals # https://docs.microsoft.com/en-us/sysinternals/
 
 # Create user
 if ($userName) {
@@ -171,7 +172,7 @@ New-ItemProperty -Path $regkey -Name "EnableFirewall" -Value 0 -PropertyType Dwo
 $scriptFile = $zipFolder + "\POST_EXECUTE.ps1"
 if (Test-Path $scriptFile) {
 	Write-Output "POST_EXECUTE - Start"
-	&$scriptFile -fromUrl $fromUrl -resourceGroup $resourceGroup -zipDownload $zipDownload -zipFolder $zipFolder -packages $packages -userName $userName -userPass $userPass
+	&$scriptFile -serviceUrl $serviceUrl -resourceGroup $resourceGroup -vmName $vmName -zipDownload $zipDownload -zipFolder $zipFolder -packages $packages -userName $userName -userPass $userPass
 	Write-Output "POST_EXECUTE - Done"
 	Remove-Item $scriptFile
 }
