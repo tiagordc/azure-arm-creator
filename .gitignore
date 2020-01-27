@@ -130,3 +130,5 @@ dmypy.json
 
 # custom
 azure/
+.deployment/
+.vscode/settings.json
