@@ -172,23 +172,5 @@ def vm_start(resource_group, machine):
 	async_vm_start.wait()
 	return '', 200
 
-@app.route('/<resource_group>/<machine>/status/<status>', methods=['POST'])
-def vm_status(resource_group, machine, status):
-	"""Receives status from VM"""
-	print(resource_group + ' - ' + machine + ' is reporting status: ' + status)
-	return '', 200
-
-@app.route('/<resource_group>/<machine>/scale/<size>', methods=['POST'])
-def vm_scale(resource_group, machine, size):
-	"""Scale VM to a given size"""
-	if size.startswith("B1"): # Hard coding B1 options only
-		vm = compute_client.virtual_machines.get(resource_group, machine)
-		vm.hardware_profile.vm_size = size
-		update_result = compute_client.virtual_machines.create_or_update(resource_group, machine, vm)
-		update_result.wait()
-	else:
-		time.sleep(30)
-	return '', 200
-
 if __name__ == '__main__':
 	app.run()

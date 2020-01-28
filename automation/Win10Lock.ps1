@@ -57,6 +57,8 @@ if ($packages) {
 
 # Windows 10 Lockdown
 
+Set-NetFirewallProfile -Enabled False
+
 Write-Output "LOCKDOWN - Choose Privacy Settings"
 $regkey = "HKLM:\SOFTWARE\Policies\Microsoft\Windows\OOBE"
 if (!(Test-Path $regkey)) {New-Item -Path $regkey -force}
