@@ -57,7 +57,9 @@ if ($packages) {
 
 # Windows 10 Lockdown
 
-Set-NetFirewallProfile -Enabled False
+Write-Output "LOCKDOWN - Disable Firewall"
+Set-NetFirewallProfile -Profile Domain,Public,Private -Enabled False
+Get-NetFirewallProfile
 
 Write-Output "LOCKDOWN - Choose Privacy Settings"
 $regkey = "HKLM:\SOFTWARE\Policies\Microsoft\Windows\OOBE"
