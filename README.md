@@ -29,7 +29,7 @@ Developed with minimum possible assets to work on an iPad to demonstrate the pro
  * automation - PowerShell and bash scripts to run as [CustomScriptExtension](https://docs.microsoft.com/en-us/azure/virtual-machines/extensions/custom-script-windows)
 
  * .env - environment configuration with [azure authentication](https://docs.microsoft.com/en-us/azure/azure-resource-manager/resource-group-create-service-principal-portal#get-application-id-and-authentication-key)
- * app.py - API endpoints
+ * application.py - API endpoints
  * auth.py - Authentication decorators
  * utils.py - Generic utilities
 
@@ -39,3 +39,21 @@ Developed with minimum possible assets to work on an iPad to demonstrate the pro
  * [Unique Names](https://www.codeisahighway.com/use-uniquestring-function-to-generate-unique-names-for-resources-in-arm-template/)
  * [SSH Password](https://github.com/Azure/azure-quickstart-templates/blob/master/101-hdinsight-linux-ssh-password/azuredeploy.json)
  * [Secrets](https://devkimchi.com/2019/04/24/6-ways-passing-secrets-to-arm-templates/)
+
+### Run on an iPad
+
+### Run on Linux
+
+python3 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+export FLASK_APP=application.py
+flask run
+
+### Run in Windows
+
+py -3 -m venv env
+env\scripts\activate
+pip install -r requirements.txt
+SET FLASK_APP=application.py
+flask run
