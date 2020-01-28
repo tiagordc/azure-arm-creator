@@ -44,16 +44,16 @@ Developed with minimum possible assets to work on an iPad to demonstrate the pro
 
 ### Run on Linux
 
-python3 -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
-export FLASK_APP=application.py
+python3 -m venv venv\
+source venv/bin/activate\
+pip install -r requirements.txt\
+export FLASK_APP=application.py\
 flask run
 
 ### Run in Windows
 
-py -3 -m venv env
-env\scripts\activate
-pip install -r requirements.txt
-SET FLASK_APP=application.py
+py -3 -m venv env\
+env\scripts\activate\
+pip install -r requirements.txt\
+SET FLASK_APP=application.py\
 flask run
