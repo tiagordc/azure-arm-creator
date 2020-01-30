@@ -32,7 +32,7 @@ if (Test-Path $scriptFile) {
 
 # Install Chocolatey
 Write-Output "CHOCOLATEY - Start"
-Set-ExecutionPolicy Bypass -Scope Process -Force; iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))
+Set-ExecutionPolicy Bypass -Scope Process -Force; Invoke-Expression ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))
 choco feature enable -n allowGlobalConfirmation
 choco install sysinternals # https://docs.microsoft.com/en-us/sysinternals/
 
@@ -50,16 +50,12 @@ else {
 # Install additional tools
 Write-Output "CHOCOLATEY - Packages"
 if ($packages) {
-	$packages.Split(",")  | ForEach {
+	$packages.Split(",") | ForEach-Object {
 		choco install $_
 	}
 }
 
 # Windows 10 Lockdown
-
-Write-Output "LOCKDOWN - Disable Firewall"
-Set-NetFirewallProfile -Profile Domain,Public,Private -Enabled False
-Get-NetFirewallProfile
 
 Write-Output "LOCKDOWN - Choose Privacy Settings"
 $regkey = "HKLM:\SOFTWARE\Policies\Microsoft\Windows\OOBE"
@@ -166,11 +162,6 @@ Write-Output "LOCKDOWN - Disable Edge first run"
 $regkey = "HKLM:\SOFTWARE\Policies\Microsoft\MicrosoftEdge\Main"
 if (!(Test-Path $regkey)) {New-Item -Path $regkey -ItemType Directory -force}
 New-ItemProperty -Path $regkey -Name "PreventFirstRunPage" -PropertyType Dword -Value 1 -Force
-
-Write-Output "LOCKDOWN - Disable Firewall"
-$regkey = "HKLM:\SOFTWARE\Policies\Microsoft\WindowsFirewall\StandardProfile"
-if (!(Test-Path $regkey)) {New-Item -Path $regkey -force}
-New-ItemProperty -Path $regkey -Name "EnableFirewall" -Value 0 -PropertyType Dword -Force
 
 # Run final script
 $scriptFile = $zipFolder + "\POST_EXECUTE.ps1"

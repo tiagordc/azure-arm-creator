@@ -35,7 +35,7 @@ def auth_required(resource_client):
                 username, password = decoded_uname_pass.decode().split(':', 1)
                 if is_admin(username, password):
                     return f(*args, **kwargs)
-                auth = resource_group.tags[os.environ['ARM_AUTH_TAG']]
+                auth = resource_group.tags['arm-auth']
                 if encoded_uname_pass == auth:
                     return f(*args, **kwargs)
                 xpto = ''

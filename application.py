@@ -56,7 +56,7 @@ def templates():
 def groups():
 	"""List created resource groups"""
 	groups = resource_client.resource_groups.list(filter="tagName eq 'created-by' and tagValue eq '" + os.environ['ARM_CREATED_TAG'] + "'")
-	result = [x.name for x in groups]
+	result = [{'name': x.tags['display-name'], 'id': x.name} for x in groups]
 	return jsonify(result)
 
 @app.route('/template/<template>/parameters', methods=['GET'])
@@ -86,13 +86,16 @@ def deploy(template):
 	parameters = request.get_json()
 	parameters['Server_URL'] = request.url_root
 	group_name = parameters['Resource_Group_Name']
-	tags = {'created-by': os.environ['ARM_CREATED_TAG'] }
+	tags = { 'created-by': os.environ['ARM_CREATED_TAG'], 'display-name': group_name }
+	prefix = os.environ['ARM_PREFIX']
+	group_name = prefix + re.sub(r"[^\w]", "", group_name)
 	if 'Resource_Group_Admin' in parameters and 'Resource_Group_Password' in parameters:
 		userpass = parameters['Resource_Group_Admin'] + ":" + parameters['Resource_Group_Password']
-		tags[os.environ['ARM_AUTH_TAG']] = b64encode(userpass.encode())
+		tags['arm-auth'] = b64encode(userpass.encode())
 	parameters = {k: {'value': v} for k, v in parameters.items() }
 	location = os.environ['AZURE_LOCATION']
 	resource_group_params = {'location':location}
+	resource_group_params.update(tags=tags)
 	resource_client.resource_groups.create_or_update(group_name, resource_group_params)
 	template_path = os.path.join(os.path.dirname(__file__), template_folder, template, 'template.json')
 	with open(template_path, 'r') as template_file_fd:
@@ -100,8 +103,6 @@ def deploy(template):
 	deployment_properties = { 'mode': DeploymentMode.incremental, 'template': template_file, 'parameters': parameters }
 	deployment_async_operation = resource_client.deployments.create_or_update(group_name, 'arm-deployment', deployment_properties)
 	deployment_async_operation.wait()
-	resource_group_params.update(tags=tags)
-	resource_client.resource_groups.update(group_name, resource_group_params)
 	return '', 200
 
 @app.route('/<resource_group>/delete', methods=['POST'])
@@ -121,6 +122,13 @@ def delete(resource_group):
 def resource(resource_group):
 	"""Resource group page"""
 	return render_template('resource.html')
+
+@app.route('/<resource_group>/name', methods=['GET'])
+@auth_required(resource_client)
+def group_name(resource_group):
+	"""Resource group display name"""
+	group = resource_client.resource_groups.get(resource_group)
+	return group.tags['display-name'], 200
 
 @app.route('/<resource_group>/vms', methods=['GET'])
 @auth_required(resource_client)

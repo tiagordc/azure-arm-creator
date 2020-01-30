@@ -13,7 +13,7 @@
                     </a>
                 </div>
                 {{/if}}
-                <div class="title">{{name}}</div>
+                <div class="title">{{displayName}}</div>
             </div>
         </div>
 
@@ -77,6 +77,7 @@
                 url: (new URL('../' + this.$route.params.name + '/admin', window.location.href)).href,
                 admin: this.$app.id === 'com.arc.creator',
                 name: this.$route.params.name,
+                displayName: '',
                 machines: [],
                 timer: null
             };
@@ -159,6 +160,12 @@
                 var app = self.$app;
 
                 if (typeof app === 'undefined') return;
+
+                if (self.displayName = '') {
+                    app.request.get('../' + self.name + '/name', null, function(data) {
+                        self.$setState({ displayName: data });
+                    });
+                }
 
                 app.request.get('../' + self.name + '/vms', null, function (data) {
                     

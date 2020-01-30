@@ -129,6 +129,4 @@ dmypy.json
 .pyre/
 
 # custom
-azure/
 .deployment
-.vscode/settings.json
