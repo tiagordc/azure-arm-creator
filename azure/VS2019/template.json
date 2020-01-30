@@ -21,11 +21,12 @@
     },
     "variables": {
         "location": "[resourceGroup().location]",
+        "password": "[concat('P4$$w0rd', uniqueString(resourceGroup().id))]",
         "scriptFile": "https://raw.githubusercontent.com/tiagordc/azure-arm-creator/master/automation/Win10Lock.ps1",
         "scriptName": "Win10Lock.ps1",
         "zipFile": "https://raw.githubusercontent.com/tiagordc/azure-arm-creator/master/azure/VS2019/Automation.zip",
         "pakages": "googlechrome",
-        "scriptParameters": "[concat('-logLevel 1 -serviceUrl \"', parameters('Server_URL'), '\" -resourceGroup \"', parameters('Resource_Group_Name'), '\" -vmName \"vm\" -zipDownload \"', variables('zipFile'), '\" -zipFolder \"C:\\Assets\" -packages \"', variables('pakages'), '\"')]"
+        "scriptParameters": "[concat('-logLevel 1 -serviceUrl \"', parameters('Server_URL'), '\" -resourceGroup \"', parameters('Resource_Group_Name'), '\" -vmName \"vm\" -zipDownload \"', variables('zipFile'), '\" -zipFolder \"C:\\Automation\" -packages \"', variables('pakages'), '\" -userName \"', parameters('Resource_Group_Admin'), '\" -userPass \"', parameters('Resource_Group_Password'), '\"')]"
     },
     "resources": [
         {
@@ -102,7 +103,7 @@
                     },
                     "osDisk": {
                         "osType": "Windows",
-                        "name": "vm_disk",
+                        "name": "disk",
                         "createOption": "FromImage",
                         "caching": "ReadWrite",
                         "managedDisk": {
@@ -113,14 +114,13 @@
                 },
                 "osProfile": {
                     "computerName": "vm",
-                    "adminUsername": "[parameters('Resource_Group_Admin')]",
-                    "adminPassword": "[parameters('Resource_Group_Password')]",
+                    "adminUsername": "vmadmin",
+                    "adminPassword": "[variables('password')]",
                     "windowsConfiguration": {
                         "provisionVMAgent": true,
                         "enableAutomaticUpdates": true
                     },
-                    "allowExtensionOperations": true,
-                    "requireGuestProvisionSignal": true
+                    "allowExtensionOperations": true
                 },
                 "networkProfile": {
                     "networkInterfaces": [
@@ -137,7 +137,7 @@
                     "apiVersion": "2017-03-30",
                     "location": "[variables('location')]",
                     "dependsOn": [
-                        "emulator"
+                        "vm"
                     ],
                     "properties": {
                         "publisher": "Microsoft.Compute",
