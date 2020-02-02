@@ -75,6 +75,8 @@
                         armFields.push(parameter);
                     }
 
+                    armFields.sort((x, y) => x.order > y.order ? 1 : -1);
+                    
                     self.$setState({
                         fields: armFields
                     });

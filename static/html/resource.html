@@ -161,7 +161,7 @@
 
                 if (typeof app === 'undefined') return;
 
-                if (self.displayName = '') {
+                if (self.displayName == '') {
                     app.request.get('../' + self.name + '/name', null, function(data) {
                         self.$setState({ displayName: data });
                     });
