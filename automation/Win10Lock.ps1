@@ -73,39 +73,11 @@ if (!(Test-Path $regkey)) {New-Item -Path $regkey -force}
 New-ItemProperty -Path $regkey -Name "AllowCortana" -Value 0 -PropertyType Dword -Force
 New-ItemProperty -Path $regkey -Name "BingSearchEnabled" -Value 0 -PropertyType Dword -Force
 New-ItemProperty -Path $regkey -Name "DisableWebSearch" -Value 1 -PropertyType Dword -Force
-$regkey = "HKCU:\SOFTWARE\Microsoft\Personalization\Settings"
-if (!(Test-Path $regkey)) {New-Item -Path $regkey -force}
-New-ItemProperty -Path $regkey -Name "AcceptedPrivacyPolicy" -Value 0 -PropertyType Dword -Force
-$regkey = "HKCU:\SOFTWARE\Microsoft\InputPersonalization"
-if (!(Test-Path $regkey)) {New-Item -Path $regkey -force}
-New-ItemProperty -Path $regkey -Name "RestrictImplicitTextCollection" -Value 1 -PropertyType Dword -Force
-New-ItemProperty -Path $regkey -Name "RestrictImplicitInkCollection" -Value 1 -PropertyType Dword -Force
-$regkey = "HKCU:\SOFTWARE\Microsoft\InputPersonalization\TrainedDataStore"
-if (!(Test-Path $regkey)) {New-Item -Path $regkey -force}
-New-ItemProperty -Path $regkey -Name "HarvestContacts" -Value 0 -PropertyType Dword -Force
-
-Write-Output "LOCKDOWN - Stops the Windows Feedback Experience"
-$regkey = "HKCU:\Software\Microsoft\Siuf\Rules"
-if (!(Test-Path $regkey)) {New-Item -Path $regkey -force}
-New-ItemProperty -Path $regkey -Name "PeriodInNanoSeconds" -Value 0 -PropertyType Dword -Force
 
 Write-Output "LOCKDOWN - Start Menu suggestions"
 $regkey = "HKLM:\SOFTWARE\Policies\Microsoft\Windows\CloudContent"
 if (!(Test-Path $regkey)) {New-Item -Path $regkey -force}
 New-ItemProperty -Path $regkey -Name "DisableWindowsConsumerFeatures" -Value 1 -PropertyType Dword -Force
-$regkey = "HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\ContentDeliveryManager"
-if (!(Test-Path $regkey)) {New-Item -Path $regkey -force}
-New-ItemProperty -Path $regkey -Name "ContentDeliveryAllowed" -Value 0 -PropertyType Dword -Force
-New-ItemProperty -Path $regkey -Name "OemPreInstalledAppsEnabled" -Value 0 -PropertyType Dword -Force
-New-ItemProperty -Path $regkey -Name "PreInstalledAppsEnabled" -Value 0 -PropertyType Dword -Force
-New-ItemProperty -Path $regkey -Name "PreInstalledAppsEverEnabled" -Value 0 -PropertyType Dword -Force
-New-ItemProperty -Path $regkey -Name "SilentInstalledAppsEnabled" -Value 0 -PropertyType Dword -Force
-New-ItemProperty -Path $regkey -Name "SystemPaneSuggestionsEnabled" -Value 0 -PropertyType Dword -Force
-
-Write-Output "LOCKDOWN - Reality Portal"
-$regkey = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Holographic"
-if (!(Test-Path $regkey)) {New-Item -Path $regkey -force}
-New-ItemProperty -Path $regkey -Name "FirstRunSucceeded" -Value 0 -PropertyType Dword -Force
 
 Write-Output "LOCKDOWN - Wi-fi Sense"
 $regkey = "HKLM:\SOFTWARE\Microsoft\PolicyManager\default\WiFi\AllowWiFiHotSpotReporting"
@@ -117,11 +89,6 @@ New-ItemProperty -Path $regkey -Name "Value" -Value 0 -PropertyType Dword -Force
 $regkey = "HKLM:\SOFTWARE\Microsoft\WcmSvc\wifinetworkmanager\config"
 if (!(Test-Path $regkey)) {New-Item -Path $regkey -force}
 New-ItemProperty -Path $regkey -Name "AutoConnectAllowedOEM" -Value 0 -PropertyType Dword -Force
-
-Write-Output "LOCKDOWN - Disables live tiles"
-$regkey = "HKCU:\SOFTWARE\Policies\Microsoft\Windows\CurrentVersion\PushNotifications"
-if (!(Test-Path $regkey)) {New-Item -Path $regkey -force}
-New-ItemProperty -Path $regkey -Name "NoTileApplicationNotification" -Value 1 -PropertyType Dword -Force
 
 Write-Output "LOCKDOWN - Turns off Data Collection"
 $regkey = "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\DataCollection"
@@ -142,11 +109,6 @@ $regkey = "HKLM:\SYSTEM\CurrentControlSet\Services\lfsvc\Service\Configuration"
 if (!(Test-Path $regkey)) {New-Item -Path $regkey -force}
 New-ItemProperty -Path $regkey -Name "Status" -Value 0 -PropertyType Dword -Force
 
-Write-Output "LOCKDOWN - Disables People icon on Taskbar"
-$regkey = "HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\People"
-if (!(Test-Path $regkey)) {New-Item -Path $regkey -force}
-New-ItemProperty -Path $regkey -Name "PeopleBand" -Value 0 -PropertyType Dword -Force
-
 Write-Output "LOCKDOWN - Disables scheduled tasks"
 Get-ScheduledTask  XblGameSaveTask | Disable-ScheduledTask
 Get-ScheduledTask  Consolidator | Disable-ScheduledTask 
@@ -162,6 +124,11 @@ Write-Output "LOCKDOWN - Disable Edge first run"
 $regkey = "HKLM:\SOFTWARE\Policies\Microsoft\MicrosoftEdge\Main"
 if (!(Test-Path $regkey)) {New-Item -Path $regkey -ItemType Directory -force}
 New-ItemProperty -Path $regkey -Name "PreventFirstRunPage" -PropertyType Dword -Value 1 -Force
+
+Write-Output "LOCKDOWN - Show file extensions"
+$regkey = "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder"
+if (!(Test-Path $regkey)) {New-Item -Path $regkey -ItemType Directory -force}
+New-ItemProperty -Path $regkey -Name "HideFileExt" -PropertyType Dword -Value 0 -Force
 
 # Run final script
 $scriptFile = $zipFolder + "\POST_EXECUTE.ps1"
