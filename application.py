@@ -1,5 +1,5 @@
 import os, re, time
-from json import load as load_json
+from json import load as load_json, loads as load_json_string
 from flask import Flask, render_template, send_from_directory, send_file, jsonify, abort, request
 from azure.common.credentials import ServicePrincipalCredentials
 from azure.mgmt.resource import ResourceManagementClient
@@ -98,8 +98,10 @@ def deploy(template):
 	resource_group_params.update(tags=tags)
 	resource_client.resource_groups.create_or_update(group_name, resource_group_params)
 	template_path = os.path.join(os.path.dirname(__file__), template_folder, template, 'template.json')
-	with open(template_path, 'r') as template_file_fd:
-		template_file = load_json(template_file_fd)
+	with open(template_path, 'r') as template_file_fd: 
+		json_string = template_file_fd.read()
+		json_string = re.sub(r"""['"]parameterOrder['"]\s*?:\s*\d+s*?,?""", "", json_string)
+		template_file = load_json_string(json_string)
 	deployment_properties = { 'mode': DeploymentMode.incremental, 'template': template_file, 'parameters': parameters }
 	deployment_async_operation = resource_client.deployments.create_or_update(group_name, 'arm-deployment', deployment_properties)
 	deployment_async_operation.wait()

