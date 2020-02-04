@@ -95,15 +95,11 @@ Write-Output "LOCKDOWN - Disabling the Diagnostics Tracking Service"
 Stop-Service "DiagTrack"
 Set-Service "DiagTrack" -StartupType Disabled
 
-Write-Output "LOCKDOWN - Disable Edge first run"
-$regkey = "HKLM:\SOFTWARE\Policies\Microsoft\MicrosoftEdge\Main"
-if (!(Test-Path $regkey)) {New-Item -Path $regkey -ItemType Directory -force}
-New-ItemProperty -Path $regkey -Name "PreventFirstRunPage" -PropertyType Dword -Value 1 -Force
-
-Write-Output "Show file extensions"
+Write-Output "LOCKDOWN - Other"
 Set-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\HideFileExt" -Name "DefaultValue" -Value 0
 Set-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\HideFileExt" -Name "CheckedValue" -Value 0
 Set-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System' -Name 'ConsentPromptBehaviorAdmin' -Value 0
+Set-ItemProperty -Path 'HKLM:\SOFTWARE\Policies\Microsoft\Windows\Explorer' -Name 'NoPinningStoreToTaskbar' -Value 1
 
 # Install Chocolatey
 Write-Output "CHOCOLATEY - Start"
@@ -117,6 +113,7 @@ if ($userName) {
 	New-LocalUser -Name $userName -Password ($userPass | ConvertTo-SecureString -AsPlainText -Force)
 	Add-LocalGroupMember -Group "Remote Desktop Users" -Member $userName
 	psexec -h -accepteula -u $userName -p $userPass cmd /c echo
+	#psexec -h -u $userName -p $userPass reg add "hkcu\Software\Policies\Microsoft\Windows\Explorer" /f /v NoPinningStoreToTaskbar /t REG_DWORD /d 1
 }
 else {
 	Write-Output "USER - Missing"
