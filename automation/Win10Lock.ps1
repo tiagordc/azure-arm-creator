@@ -30,31 +30,6 @@ if (Test-Path $scriptFile) {
 	Write-Output "PRE_EXECUTE - Missing"
 }
 
-# Install Chocolatey
-Write-Output "CHOCOLATEY - Start"
-Set-ExecutionPolicy Bypass -Scope Process -Force; Invoke-Expression ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))
-choco feature enable -n allowGlobalConfirmation
-choco install sysinternals # https://docs.microsoft.com/en-us/sysinternals/
-
-# Create user
-if ($userName) {
-	Write-Output "USER - Start"
-	New-LocalUser -Name $userName -Password ($userPass | ConvertTo-SecureString -AsPlainText -Force)
-	Add-LocalGroupMember -Group "Remote Desktop Users" -Member $userName
-	psexec -h -accepteula -u $userName -p $userPass cmd /c echo
-}
-else {
-	Write-Output "USER - Missing"
-}
-
-# Install additional tools
-Write-Output "CHOCOLATEY - Packages"
-if ($packages) {
-	$packages.Split(",") | ForEach-Object {
-		choco install $_
-	}
-}
-
 # Windows 10 Lockdown
 
 Write-Output "LOCKDOWN - Choose Privacy Settings"
@@ -125,10 +100,35 @@ $regkey = "HKLM:\SOFTWARE\Policies\Microsoft\MicrosoftEdge\Main"
 if (!(Test-Path $regkey)) {New-Item -Path $regkey -ItemType Directory -force}
 New-ItemProperty -Path $regkey -Name "PreventFirstRunPage" -PropertyType Dword -Value 1 -Force
 
-Write-Output "LOCKDOWN - Show file extensions"
+Write-Output "Show file extensions"
 Set-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\HideFileExt" -Name "DefaultValue" -Value 0
 Set-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\HideFileExt" -Name "CheckedValue" -Value 0
 Set-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System' -Name 'ConsentPromptBehaviorAdmin' -Value 0
+
+# Install Chocolatey
+Write-Output "CHOCOLATEY - Start"
+Set-ExecutionPolicy Bypass -Scope Process -Force; Invoke-Expression ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))
+choco feature enable -n allowGlobalConfirmation
+choco install sysinternals # https://docs.microsoft.com/en-us/sysinternals/
+
+# Create user
+if ($userName) {
+	Write-Output "USER - Start"
+	New-LocalUser -Name $userName -Password ($userPass | ConvertTo-SecureString -AsPlainText -Force)
+	Add-LocalGroupMember -Group "Remote Desktop Users" -Member $userName
+	psexec -h -accepteula -u $userName -p $userPass cmd /c echo
+}
+else {
+	Write-Output "USER - Missing"
+}
+
+# Install additional tools
+Write-Output "CHOCOLATEY - Packages"
+if ($packages) {
+	$packages.Split(",") | ForEach-Object {
+		choco install $_
+	}
+}
 
 # Run final script
 $scriptFile = $zipFolder + "\POST_EXECUTE.ps1"
