@@ -95,6 +95,11 @@ Write-Output "LOCKDOWN - Disabling the Diagnostics Tracking Service"
 Stop-Service "DiagTrack"
 Set-Service "DiagTrack" -StartupType Disabled
 
+Write-Output "LOCKDOWN - Disables edge first run"
+$regkey = "HKLM:\SOFTWARE\Policies\Microsoft\MicrosoftEdge\Main"
+if (!(Test-Path $regkey)) {New-Item -Path $regkey -force}
+New-ItemProperty -Path $regkey -Name "PreventFirstRunPage" -Value 1 -PropertyType Dword -Force
+
 Write-Output "LOCKDOWN - Other"
 Set-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System' -Name 'ConsentPromptBehaviorAdmin' -Value 0
 
@@ -112,6 +117,7 @@ if ($userName) {
 	psexec -h -accepteula -u $userName -p $userPass cmd /c echo
 	psexec -h -u $userName -p $userPass reg add "hkcu\Software\Policies\Microsoft\Windows\Explorer" /f /v NoPinningStoreToTaskbar /t REG_DWORD /d 1
 	psexec -h -u $userName -p $userPass reg add "hkcu\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" /f /v HideFileExt /t REG_DWORD /d 0
+	psexec -h -u $userName -p $userPass reg add "hkcu\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager" /f /v "SubscribedContent-310093Enabled" /t REG_DWORD /d 0
 }
 else {
 	Write-Output "USER - Missing"
