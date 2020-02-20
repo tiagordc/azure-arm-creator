@@ -4,10 +4,15 @@ param ([int]$logLevel = 0, [string]$serviceUrl, [string]$resourceGroup, [string]
 Write-Output "POST EXECUTE - Add user to local administrators"
 Add-LocalGroupMember -Group "Administrators" -Member $userName
 
-refreshenv
+Set-Location C:\
+Set-Location (Get-ChildItem -Path c:\ -Filter "Python*" -Directory).Name
+Write-Output (Get-Location).Path
 
-python -m pip install --upgrade pip
+python.exe -m pip install --upgrade pip
 
-pip install pipenv
-pip install jupyter
-pip install tensorflow
+Set-Location Scripts
+Write-Output (Get-Location).Path
+
+pip.exe install pipenv
+pip.exe install jupyter
+pip.exe install tensorflow
