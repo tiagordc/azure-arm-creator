@@ -4,15 +4,14 @@ param ([int]$logLevel = 0, [string]$serviceUrl, [string]$resourceGroup, [string]
 Write-Output "POST EXECUTE - Add user to local administrators"
 Add-LocalGroupMember -Group "Administrators" -Member $userName
 
-Set-Location C:\
-Set-Location (Get-ChildItem -Path c:\ -Filter "Python*" -Directory).Name
-Write-Output (Get-Location).Path
+choco install python --version=3.7.4
+choco install pycharm-community
 
-python.exe -m pip install --upgrade pip
+$python = (Get-ChildItem -Path c:\ -Filter "Python*" -Directory).Name
+Write-Output $python
 
-Set-Location Scripts
-Write-Output (Get-Location).Path
+$path = "C:\" + $python + "\Scripts\pip.exe"
+& $path install --upgrade pip
+& $path install pipenv jupyter
 
-pip.exe install pipenv
-pip.exe install jupyter
-pip.exe install tensorflow
+# & $path install tensorflow

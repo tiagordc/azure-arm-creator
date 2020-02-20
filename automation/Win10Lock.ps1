@@ -132,9 +132,6 @@ if ($packages) {
 	}
 }
 
-Write-Output "CHOCOLATEY - Refresh Path..."
-Update-SessionEnvironment
-
 # Run final script
 $scriptFile = $zipFolder + "\POST_EXECUTE.ps1"
 if (Test-Path $scriptFile) {
