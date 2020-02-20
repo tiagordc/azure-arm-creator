@@ -24,11 +24,10 @@
     },
     "variables": {
         "location": "[resourceGroup().location]",
-        "password": "[concat('P4$$w0rd', uniqueString(resourceGroup().id))]",
         "scriptFile": "https://raw.githubusercontent.com/tiagordc/azure-arm-creator/master/automation/Win10Lock.ps1",
         "scriptName": "Win10Lock.ps1",
-        "zipFile": "https://raw.githubusercontent.com/tiagordc/azure-arm-creator/master/azure/VS2019/Automation.zip",
-        "pakages": "googlechrome",
+        "zipFile": "https://raw.githubusercontent.com/tiagordc/azure-arm-creator/master/azure/W10AI/Automation.zip",
+        "pakages": "googlechrome,anaconda3,pycharm-community",
         "scriptParameters": "[concat('-logLevel 1 -serviceUrl \"', parameters('Server_URL'), '\" -resourceGroup \"', parameters('Resource_Group_Name'), '\" -vmName \"vm\" -zipDownload \"', variables('zipFile'), '\" -zipFolder \"C:\\Automation\" -packages \"', variables('pakages'), '\" -userName \"', parameters('Resource_Group_Admin'), '\" -userPass \"', parameters('Resource_Group_Password'), '\"')]"
     },
     "resources": [
@@ -94,31 +93,30 @@
                 "[resourceId('Microsoft.Network/networkInterfaces', 'ni')]"
             ],
             "properties": {
+                "licenseType": "Windows_Client",
                 "hardwareProfile": {
-                    "vmSize": "Standard_DS3_v2"
+                    "vmSize": "Standard_NC6_Promo"
                 },
                 "storageProfile": {
                     "imageReference": {
-                        "publisher": "microsoftvisualstudio",
-                        "offer": "visualstudio2019latest",
-                        "sku": "vs-2019-ent-latest-win10-n",
+                        "publisher": "MicrosoftWindowsDesktop",
+                        "offer": "Windows-10",
+                        "sku": "19h2-pro",
                         "version": "latest"
                     },
                     "osDisk": {
                         "osType": "Windows",
                         "name": "disk",
                         "createOption": "FromImage",
-                        "caching": "ReadWrite",
                         "managedDisk": {
-                            "storageAccountType": "Premium_LRS"
-                        },
-                        "diskSizeGB": 127
+                            "storageAccountType": "Standard_LRS"
+                        }
                     }
                 },
                 "osProfile": {
                     "computerName": "vm",
                     "adminUsername": "vmadmin",
-                    "adminPassword": "[variables('password')]",
+                    "adminPassword": "[parameters('Resource_Group_Password')]",
                     "windowsConfiguration": {
                         "provisionVMAgent": true,
                         "enableAutomaticUpdates": true
