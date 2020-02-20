@@ -12,6 +12,5 @@ Write-Output $python
 
 $path = "C:\" + $python + "\Scripts\pip.exe"
 & $path install --upgrade pip
-& $path install pipenv jupyter
-
-# & $path install tensorflow
+& $path install pipenv jupyter tensorflow
+& $path install numpy scipy scikit-learn pillow h5py keras
