@@ -127,7 +127,7 @@ else {
 Write-Output "CHOCOLATEY - Packages"
 if ($packages) {
 	$packages.Split(",") | ForEach-Object {
-		Write-Output "CHOCOLATEY - " + $_
+		Write-Output $_
 		choco install $_
 	}
 }
