@@ -27,7 +27,7 @@
         "scriptFile": "https://raw.githubusercontent.com/tiagordc/azure-arm-creator/master/automation/Win10Lock.ps1",
         "scriptName": "Win10Lock.ps1",
         "zipFile": "https://raw.githubusercontent.com/tiagordc/azure-arm-creator/master/azure/W10DL/Automation.zip",
-        "pakages": "googlechrome,opensslkey",
+        "pakages": "googlechrome",
         "scriptParameters": "[concat('-logLevel 1 -serviceUrl \"', parameters('Server_URL'), '\" -resourceGroup \"', parameters('Resource_Group_Name'), '\" -vmName \"vm\" -zipDownload \"', variables('zipFile'), '\" -zipFolder \"C:\\Automation\" -packages \"', variables('pakages'), '\" -userName \"', parameters('Resource_Group_Admin'), '\" -userPass \"', parameters('Resource_Group_Password'), '\"')]"
     },
     "resources": [
@@ -39,6 +39,10 @@
             "properties": {
                 "securityRules": [
                     {
+                        "name": "Jupyter",
+                        "properties": { "protocol": "TCP", "sourcePortRange": "*", "destinationPortRange": "8888", "sourceAddressPrefix": "*", "destinationAddressPrefix": "*", "access": "Allow", "priority": 100, "direction": "Inbound" }
+                    },
+                     {
                         "name": "RDP",
                         "properties": { "protocol": "TCP", "sourcePortRange": "*", "destinationPortRange": "3389", "sourceAddressPrefix": "*", "destinationAddressPrefix": "*", "access": "Allow", "priority": 300, "direction": "Inbound" }
                     }
