@@ -27,7 +27,7 @@
         "scriptFile": "https://raw.githubusercontent.com/tiagordc/azure-arm-creator/master/automation/Win10Lock.ps1",
         "scriptName": "Win10Lock.ps1",
         "zipFile": "https://raw.githubusercontent.com/tiagordc/azure-arm-creator/master/azure/W10DL/Automation.zip",
-        "pakages": "googlechrome,python --version=3.7.4,pycharm-community,openssl",
+        "pakages": "googlechrome",
         "scriptParameters": "[concat('-logLevel 1 -serviceUrl \"', parameters('Server_URL'), '\" -resourceGroup \"', parameters('Resource_Group_Name'), '\" -vmName \"vm\" -zipDownload \"', variables('zipFile'), '\" -zipFolder \"C:\\Automation\" -packages \"', variables('pakages'), '\" -userName \"', parameters('Resource_Group_Admin'), '\" -userPass \"', parameters('Resource_Group_Password'), '\"')]"
     },
     "resources": [
@@ -96,6 +96,11 @@
             "dependsOn": [
                 "[resourceId('Microsoft.Network/networkInterfaces', 'ni')]"
             ],
+             "tags": {
+                "arm-name": "Deep Learning VM",
+                "arm-description": "Windows 10 Pro",
+                "arm-user": "[parameters('Resource_Group_Admin')]"
+            },
             "properties": {
                 "licenseType": "Windows_Client",
                 "hardwareProfile": {
