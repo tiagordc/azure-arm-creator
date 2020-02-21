@@ -14,3 +14,6 @@ $path = "C:\" + $python + "\Scripts\pip.exe"
 & $path install --upgrade pip
 & $path install pipenv jupyter tensorflow
 & $path install numpy scipy scikit-learn pillow h5py keras
+
+$path = "C:\" + $python + "\Scripts\jupyter.exe"
+& $path notebook --generate-config
