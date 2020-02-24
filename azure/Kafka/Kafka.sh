@@ -10,4 +10,4 @@ tar -xzf kafka_2.12-2.0.0.tgz
 rm -f kafka_2.12-2.0.0.tgz 
 
 echo 'export PATH=$PATH:$HOME/kafka_2.12-2.0.0/bin' >>~/.bash_profile
-echo "$1" >~/parameters.txt
+echo -e "Index: $1\nZone: $2\nZookeper: $3\nKafka: $4\nPrefix: $5" >~/setup.properties

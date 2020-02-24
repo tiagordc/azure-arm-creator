@@ -280,7 +280,7 @@
                         "autoUpgradeMinorVersion": true,
                         "settings": { },
                         "protectedSettings": {
-                            "commandToExecute": "sh Zoo.sh",
+                            "commandToExecute": "sudo sh Zoo.sh",
                             "fileUris": [
                                 "https://raw.githubusercontent.com/tiagordc/azure-arm-creator/master/azure/Kafka/Zoo.sh"
                             ]  
@@ -352,7 +352,7 @@
                         "autoUpgradeMinorVersion": true,
                         "settings": { },
                         "protectedSettings": {
-                            "commandToExecute": "[concat('sudo sh Kafka.sh ', string(copyIndex()))]",
+                            "commandToExecute": "[concat('sudo sh Kafka.sh ', string(copyIndex()), ' ', string(add(mod(copyIndex(),3),1)), ' ',  parameters('Zookeeper_Instances'), ' ', parameters('Kafka_Instances'), ' \"', variables('ip_prefix'), '\"')]",
                             "fileUris": [
                                 "https://raw.githubusercontent.com/tiagordc/azure-arm-creator/master/azure/Kafka/Kafka.sh"
                             ]  
