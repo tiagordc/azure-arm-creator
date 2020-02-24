@@ -2,6 +2,12 @@
 
 cd $HOME
 
+VM_INDEX=$1
+AVAILABILITY_ZONE=$2
+ZOOKEEPER_INSTANCES=$3
+KAFKA_INSTANCES=$4
+IP_PREFIX=$5
+
 sudo yum -y install java-1.8.0-openjdk
 sudo yum -y install wget
 
