@@ -26,7 +26,7 @@
                         <div class="item-inner">
                             <div class="item-title item-label">{{this.label}}</div>
                             <div class="item-input-wrap">
-                                <input type="{{this.inputType}}" placeholder="{{this.placeholder}}" value="{{this.defaultValue}}" name="{{this.name}}">
+                                <input type="{{this.inputType}}" placeholder="{{this.placeholder}}" value="{{this.defaultValue}}" name="{{this.name}}" data-type="{{this.type}}">
                             </div>
                         </div>
                     </li>
@@ -70,7 +70,17 @@
                         var parameter = armParameters[key];
                         parameter.name = key;
                         parameter.label = key.replace(/_/g, " ");
-                        parameter.inputType = parameter.type == 'securestring' ? 'password' : 'text';
+                        switch (parameter.type) {
+                            case 'securestring':
+                                parameter.inputType = 'password';
+                                break;
+                            case 'int':
+                                parameter.inputType = 'number';
+                                break;
+                            default:
+                                parameter.inputType = 'text';
+                                break;
+                        }
                         parameter.placeholder = parameter.metadata && parameter.metadata.description ? parameter.metadata.description : parameter.label;
                         armFields.push(parameter);
                     }
@@ -84,7 +94,24 @@
                 });
 
                 self.el.querySelector("#deploy").onclick = () => {
-                    var formData = app.form.convertToData('#my-form');
+
+                    var formData = {};
+                    //var formData = app.form.convertToData('#my-form');
+                    var fields = document.getElementById('my-form').querySelectorAll('input');
+                    for (var i = 0; i < fields.length; i++) {
+                        var field = fields[i];
+                        var type = field.attributes["data-type"].value;
+                        switch (type) {
+                            case 'int':
+                                formData[field.name] = parseInt(field.value);
+                                break;
+                            default:
+                                formData[field.name] = field.value;
+                                break;
+                        }
+                        
+                    }
+
                     var xhr = new XMLHttpRequest();
                     xhr.open('POST', 'template/' + path + '/deploy');
                     xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
@@ -100,8 +127,10 @@
                             notif.open();
                         }
                     };
+
                     xhr.send(JSON.stringify(formData));
                     page.router.back();
+
                 };
 
             }

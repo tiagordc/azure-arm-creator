@@ -25,7 +25,7 @@ $path = "C:\$python\python.exe"
 $pass = (& $path -c "from notebook.auth import passwd; print(passwd('$userPass'))")
 $command = @"
 @echo off
-call jupyter notebook --ip=* --no-browser --port 8888 --certfile='C:\jupyter.pem' --keyfile 'C:\jupyter.key' --allow-root --notebook-dir='C:\Notebooks' --NotebookApp.allow_origin=* --NotebookApp.password='$pass'
+call jupyter notebook --ip=* --no-browser --port 8888 --certfile='C:\jupyter.pem' --keyfile 'C:\jupyter.key' --allow-root --notebook-dir='C:\\Notebooks' --NotebookApp.allow_origin=* --NotebookApp.password='$pass'
 pause
 "@
 Set-Content "C:\jupyter.bat" $command

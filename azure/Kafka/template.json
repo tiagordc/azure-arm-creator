@@ -1,0 +1,247 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "Resource_Group_Name": {
+            "parameterOrder": 1,
+            "type": "string",
+            "defaultValue": "Kafka"
+        },
+        "Resource_Group_Admin": {
+            "parameterOrder": 2,
+            "type": "string",
+            "defaultValue": "KafkaAdmin"
+        },
+        "Resource_Group_Password": {
+            "parameterOrder": 3,
+            "type": "securestring",
+            "defaultValue": ""
+        },
+        "Address_Prefix": {
+            "parameterOrder": 4,
+            "type": "string",
+            "defaultValue": "10.0.0.0/16",
+            "metadata": {
+                "description": "The network address space for the virtual network"
+            }
+        },
+        "Subnet_Prefix": {
+            "parameterOrder": 5,
+            "type": "string",
+            "defaultValue": "10.0.0.0/24",
+            "metadata": {
+                "description": "Address space for the virtual network subnet (netmask 24)"
+            }
+        },
+        "Zookeeper_Instances": {
+            "parameterOrder": 6,
+            "type": "int",
+            "defaultValue": 1,
+            "metadata": {
+                "description": "Number of Apache ZooKeeper service instances"
+            }
+        },
+        "Kafka_Instances": {
+            "parameterOrder": 7,
+            "type": "int",
+            "defaultValue": 3,
+            "metadata": {
+                "description": "Number of Apache Kafka broker instances"
+            }
+        },
+        "Server_URL": {
+            "type": "string",
+            "defaultValue": ""
+        }
+    },
+    "variables": {
+        "location": "[resourceGroup().location]",
+        "ip_prefix": "[substring(parameters('Subnet_Prefix'), 0, add(1, lastIndexOf(parameters('Subnet_Prefix'), '.')))]"
+    },
+    "resources": [
+        {
+            "type": "Microsoft.Network/virtualNetworks",
+            "apiVersion": "2019-11-01",
+            "name": "vnet",
+            "location": "[variables('location')]",
+            "properties": {
+                "addressSpace": {
+                    "addressPrefixes": [
+                        "[parameters('Address_Prefix')]"
+                    ]
+                },
+                "subnets": [
+                    {
+                        "name": "subnet",
+                        "properties": {
+                            "addressPrefix": "[parameters('Subnet_Prefix')]"
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "type": "Microsoft.Network/virtualNetworks/subnets",
+            "apiVersion": "2019-11-01",
+            "name": "vnet/subnet",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/virtualNetworks', 'vnet')]"
+            ],
+            "properties": {
+                "addressPrefix": "[parameters('Subnet_Prefix')]"
+            }
+        },
+        {
+            "type": "Microsoft.Network/networkSecurityGroups",
+            "apiVersion": "2019-11-01",
+            "name": "nsg",
+            "location": "[variables('location')]",
+            "properties": {
+                "securityRules": [
+                    {
+                        "name": "SSH",
+                        "properties": { "protocol": "TCP", "sourcePortRange": "*", "destinationPortRange": "22", "sourceAddressPrefix": "*", "destinationAddressPrefix": "*", "access": "Allow", "priority": 300, "direction": "Inbound" }
+                    }
+                ]
+            }
+        },
+
+        {
+            "type": "Microsoft.Network/networkInterfaces",
+            "apiVersion": "2019-11-01",
+            "name": "[concat('Zoo', copyIndex(), '-ni')]",
+            "location": "[variables('location')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/networkSecurityGroups', 'nsg')]"
+            ],
+            "copy": {
+                "name": "ZooInterfaces",
+                "count": "[parameters('Zookeeper_Instances')]"
+            },
+            "properties": {
+                "ipConfigurations": [
+                    {
+                        "name": "ipconfig",
+                        "properties": {
+                            "privateIPAddressVersion": "IPv4",
+                            "privateIPAddress": "[concat(variables('ip_prefix'), add(10, copyIndex()))]",
+                            "privateIPAllocationMethod": "Static",
+                            "subnet": { "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', 'vnet', 'subnet')]" }
+                        }
+                    }
+                ],
+                "networkSecurityGroup": {
+                    "id": "[resourceId('Microsoft.Network/networkSecurityGroups', 'nsg')]"
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Network/networkInterfaces",
+            "apiVersion": "2019-11-01",
+            "name": "[concat('Kafka', copyIndex(), '-ni')]",
+            "location": "[variables('location')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/networkSecurityGroups', 'nsg')]"
+            ],
+            "copy": {
+                "name": "KafkaInterfaces",
+                "count": "[parameters('Kafka_Instances')]"
+            },
+            "properties": {
+                "ipConfigurations": [
+                    {
+                        "name": "ipconfig",
+                        "properties": {
+                            "privateIPAddressVersion": "IPv4",
+                            "privateIPAddress": "[concat(variables('ip_prefix'), add(copyIndex(), add(10, parameters('Zookeeper_Instances'))))]",
+                            "privateIPAllocationMethod": "Static",
+                            "subnet": { "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', 'vnet', 'subnet')]" }
+                        }
+                    }
+                ],
+                "networkSecurityGroup": {
+                    "id": "[resourceId('Microsoft.Network/networkSecurityGroups', 'nsg')]"
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Compute/virtualMachines",
+            "apiVersion": "2019-07-01",
+            "name": "[concat('Zoo', copyIndex())]",
+            "location": "[variables('location')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/networkInterfaces', concat('Zoo', copyIndex(), '-ni'))]"
+            ],
+            "copy": {
+                "name": "ZooMachines",
+                "count": "[parameters('Zookeeper_Instances')]"
+            },
+            "zones": ["1"],
+            "properties": {
+                "hardwareProfile": { "vmSize": "Standard_B1s" },
+                "storageProfile": {
+                    "imageReference": { "publisher": "OpenLogic", "offer": "CentOS", "sku": "7.7", "version": "latest" },
+                    "osDisk": {
+                        "osType": "Linux",
+                        "name": "[concat('Zoo', copyIndex(), '-disk')]",
+                        "createOption": "FromImage",
+                        "managedDisk": { "storageAccountType": "Premium_LRS" },
+                        "diskSizeGB": 31
+                    }
+                },
+                "osProfile": {
+                    "computerName": "[concat('Zoo', copyIndex())]",
+                    "adminUsername": "[parameters('Resource_Group_Admin')]",
+                    "adminPassword": "[parameters('Resource_Group_Password')]"
+                },
+                "networkProfile": {
+                    "networkInterfaces": [
+                        {
+                            "id": "[resourceId('Microsoft.Network/networkInterfaces', concat('Zoo', copyIndex(), '-ni'))]"
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Compute/virtualMachines",
+            "apiVersion": "2019-07-01",
+            "name": "[concat('Kafka', copyIndex())]",
+            "location": "[variables('location')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/networkInterfaces', concat('Kafka', copyIndex(), '-ni'))]"
+            ],
+            "copy": {
+                "name": "KafkaMachines",
+                "count": "[parameters('Kafka_Instances')]"
+            },
+            "zones": ["1"],
+            "properties": {
+                "hardwareProfile": { "vmSize": "Standard_B1s" },
+                "storageProfile": {
+                    "imageReference": { "publisher": "OpenLogic", "offer": "CentOS", "sku": "7.7", "version": "latest" },
+                    "osDisk": {
+                        "osType": "Linux",
+                        "name": "[concat('Kafka', copyIndex(), '-disk')]",
+                        "createOption": "FromImage",
+                        "managedDisk": { "storageAccountType": "Premium_LRS" },
+                        "diskSizeGB": 31
+                    }
+                },
+                "osProfile": {
+                    "computerName": "[concat('Kafka', copyIndex())]",
+                    "adminUsername": "[parameters('Resource_Group_Admin')]",
+                    "adminPassword": "[parameters('Resource_Group_Password')]"
+                },
+                "networkProfile": {
+                    "networkInterfaces": [
+                        {
+                            "id": "[resourceId('Microsoft.Network/networkInterfaces', concat('Kafka', copyIndex(), '-ni'))]"
+                        }
+                    ]
+                }
+            }
+        }
+        
+    ]
+}
