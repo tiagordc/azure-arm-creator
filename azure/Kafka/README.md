@@ -18,3 +18,6 @@ https://docs.microsoft.com/en-us/azure/azure-resource-manager/templates/template
 
 ARM custom scripts on Linux:
 https://docs.microsoft.com/en-us/azure/virtual-machines/extensions/custom-script-linux
+
+Shell Scripts Reference:
+http://linuxcommand.org/lc3_writing_shell_scripts.php#contents
