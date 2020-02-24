@@ -16,4 +16,4 @@ tar -xzf kafka_2.12-2.0.0.tgz
 rm -f kafka_2.12-2.0.0.tgz 
 
 echo 'export PATH=$PATH:$HOME/kafka_2.12-2.0.0/bin' >>~/.bash_profile
-sed -r -i "s/(broker.id)=(.*)/\1=${VM_INDEX}/g" $HOME/kafka_2.12-2.0.0/config/config/server.properties
+sed -r -i "s/(broker.id)=(.*)/\1=${VM_INDEX}/g" $HOME/kafka_2.12-2.0.0/config/server.properties
