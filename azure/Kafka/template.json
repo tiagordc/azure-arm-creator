@@ -119,7 +119,7 @@
         {
             "type": "Microsoft.Network/virtualNetworks/subnets",
             "apiVersion": "2019-11-01",
-            "name": "vnet/AzureBastionSubnet'",
+            "name": "vnet/AzureBastionSubnet",
             "dependsOn": [
                 "[resourceId('Microsoft.Network/virtualNetworks', 'vnet')]"
             ],
@@ -335,7 +335,31 @@
                         }
                     ]
                 }
-            }
+            },
+            "resources": [
+                {
+                    "type": "extensions",
+                    "name": "[concat('Zoo', copyIndex(), '-script')]",
+                    "apiVersion": "2019-07-01",
+                    "location": "[variables('location')]",
+                    "dependsOn": [
+                        "[resourceId('Microsoft.Compute/virtualMachines/', concat('Zoo', copyIndex()))]"
+                    ],
+                    "properties": {
+                        "publisher": "Microsoft.Azure.Extensions",
+                        "type": "CustomScript",
+                        "typeHandlerVersion": "2.1",
+                        "autoUpgradeMinorVersion": true,
+                        "settings": { },
+                        "protectedSettings": {
+                            "commandToExecute": "sh Kafka.sh",
+                            "fileUris": [
+                                "https://raw.githubusercontent.com/tiagordc/azure-arm-creator/master/azure/Kafka/Kafka.sh"
+                            ]  
+                        }
+                    }
+                }
+            ]
         }
     ]
 }
