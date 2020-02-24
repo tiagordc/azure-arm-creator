@@ -25,7 +25,7 @@
                 "description": "The network address space for the virtual network"
             }
         },
-        "Subnet_Prefix": {
+        "VMs_Subnet": {
             "parameterOrder": 5,
             "type": "string",
             "defaultValue": "10.0.0.0/24",
@@ -33,8 +33,16 @@
                 "description": "Address space for the virtual network subnet (netmask 24)"
             }
         },
-        "Zookeeper_Instances": {
+        "Bastion_Subnet": {
             "parameterOrder": 6,
+            "type": "string",
+            "defaultValue": "10.0.1.0/24",
+            "metadata": {
+                "description": "Address space for Azure Bastion"
+            }
+        },
+        "Zookeeper_Instances": {
+            "parameterOrder": 7,
             "type": "int",
             "defaultValue": 1,
             "metadata": {
@@ -42,7 +50,7 @@
             }
         },
         "Kafka_Instances": {
-            "parameterOrder": 7,
+            "parameterOrder": 8,
             "type": "int",
             "defaultValue": 3,
             "metadata": {
@@ -56,9 +64,20 @@
     },
     "variables": {
         "location": "[resourceGroup().location]",
-        "ip_prefix": "[substring(parameters('Subnet_Prefix'), 0, add(1, lastIndexOf(parameters('Subnet_Prefix'), '.')))]"
+        "ip_prefix": "[substring(parameters('VMs_Subnet'), 0, add(1, lastIndexOf(parameters('VMs_Subnet'), '.')))]"
     },
     "resources": [
+        {
+            "type": "Microsoft.Network/publicIPAddresses",
+            "apiVersion": "2019-11-01",
+            "name": "bastion-ip",
+            "location": "[variables('location')]",
+            "sku": { "name": "Standard" },
+            "properties": {
+                "publicIPAddressVersion": "IPv4",
+                "publicIPAllocationMethod": "Static"
+            }
+        },
         {
             "type": "Microsoft.Network/virtualNetworks",
             "apiVersion": "2019-11-01",
@@ -69,18 +88,43 @@
                     "addressPrefixes": [
                         "[parameters('Address_Prefix')]"
                     ]
-                }
+                },
+                "subnets": [
+                    {
+                        "name": "VirtualMachinesSubnet",
+                        "properties": {
+                            "addressPrefix": "[parameters('VMs_Subnet')]"
+                        }
+                    },
+                    {
+                        "name": "AzureBastionSubnet",
+                        "properties": {
+                            "addressPrefix": "[parameters('Bastion_Subnet')]"
+                        }
+                    }
+                ]
             }
         },
         {
             "type": "Microsoft.Network/virtualNetworks/subnets",
             "apiVersion": "2019-11-01",
-            "name": "vnet/subnet",
+            "name": "vnet/VirtualMachinesSubnet",
             "dependsOn": [
                 "[resourceId('Microsoft.Network/virtualNetworks', 'vnet')]"
             ],
             "properties": {
-                "addressPrefix": "[parameters('Subnet_Prefix')]"
+                "addressPrefix": "[parameters('VMs_Subnet')]"
+            }
+        },
+        {
+            "type": "Microsoft.Network/virtualNetworks/subnets",
+            "apiVersion": "2019-11-01",
+            "name": "vnet/AzureBastionSubnet'",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/virtualNetworks', 'vnet')]"
+            ],
+            "properties": {
+                "addressPrefix": "[parameters('Bastion_Subnet')]"
             }
         },
         {
@@ -97,15 +141,39 @@
                 ]
             }
         },
-
-
+        {
+            "type": "Microsoft.Network/bastionHosts",
+            "apiVersion": "2019-11-01",
+            "name": "bastion",
+            "location": "[variables('location')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/publicIPAddresses', 'bastion-ip')]",
+                "[resourceId('Microsoft.Network/virtualNetworks', 'vnet')]"
+            ],
+            "properties": {
+                "ipConfigurations": [
+                    {
+                        "name": "ipconfig",
+                        "properties": {
+                            "publicIPAddress": {
+                                "id": "[resourceId('Microsoft.Network/publicIPAddresses', 'bastion-ip')]"
+                            },
+                            "subnet": {
+                                "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', 'vnet', 'AzureBastionSubnet')]"
+                            }
+                        }
+                    }
+                ]
+            }
+        },
         {
             "type": "Microsoft.Network/networkInterfaces",
             "apiVersion": "2019-11-01",
             "name": "[concat('Zoo', copyIndex(), '-ni')]",
             "location": "[variables('location')]",
             "dependsOn": [
-                "[resourceId('Microsoft.Network/networkSecurityGroups', 'nsg')]"
+                "[resourceId('Microsoft.Network/networkSecurityGroups', 'nsg')]",
+                "[resourceId('Microsoft.Network/virtualNetworks', 'vnet')]"
             ],
             "copy": {
                 "name": "ZooInterfaces",
@@ -119,7 +187,7 @@
                             "privateIPAddressVersion": "IPv4",
                             "privateIPAddress": "[concat(variables('ip_prefix'), add(10, copyIndex()))]",
                             "privateIPAllocationMethod": "Static",
-                            "subnet": { "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', 'vnet', 'subnet')]" }
+                            "subnet": { "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', 'vnet', 'VirtualMachinesSubnet')]" }
                         }
                     }
                 ],
@@ -134,7 +202,8 @@
             "name": "[concat('Kafka', copyIndex(), '-ni')]",
             "location": "[variables('location')]",
             "dependsOn": [
-                "[resourceId('Microsoft.Network/networkSecurityGroups', 'nsg')]"
+                "[resourceId('Microsoft.Network/networkSecurityGroups', 'nsg')]",
+                "[resourceId('Microsoft.Network/virtualNetworks', 'vnet')]"
             ],
             "copy": {
                 "name": "KafkaInterfaces",
@@ -148,7 +217,7 @@
                             "privateIPAddressVersion": "IPv4",
                             "privateIPAddress": "[concat(variables('ip_prefix'), add(copyIndex(), add(10, parameters('Zookeeper_Instances'))))]",
                             "privateIPAllocationMethod": "Static",
-                            "subnet": { "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', 'vnet', 'subnet')]" }
+                            "subnet": { "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', 'vnet', 'VirtualMachinesSubnet')]" }
                         }
                     }
                 ],
@@ -268,6 +337,5 @@
                 }
             }
         }
-        
     ]
 }
