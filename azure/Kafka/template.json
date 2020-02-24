@@ -169,7 +169,7 @@
         {
             "type": "Microsoft.Network/networkInterfaces",
             "apiVersion": "2019-11-01",
-            "name": "[concat('Zoo', copyIndex(), '-ni')]",
+            "name": "[concat('Zoo-', add(1, copyIndex()), '-ni')]",
             "location": "[variables('location')]",
             "dependsOn": [
                 "[resourceId('Microsoft.Network/networkSecurityGroups', 'nsg')]",
@@ -199,7 +199,7 @@
         {
             "type": "Microsoft.Network/networkInterfaces",
             "apiVersion": "2019-11-01",
-            "name": "[concat('Kafka', copyIndex(), '-ni')]",
+            "name": "[concat('Kafka-', add(1, copyIndex()), '-ni')]",
             "location": "[variables('location')]",
             "dependsOn": [
                 "[resourceId('Microsoft.Network/networkSecurityGroups', 'nsg')]",
@@ -229,10 +229,10 @@
         {
             "type": "Microsoft.Compute/virtualMachines",
             "apiVersion": "2019-07-01",
-            "name": "[concat('Zoo', copyIndex())]",
+            "name": "[concat('Zoo-', add(1, copyIndex()))]",
             "location": "[variables('location')]",
             "dependsOn": [
-                "[resourceId('Microsoft.Network/networkInterfaces', concat('Zoo', copyIndex(), '-ni'))]"
+                "[resourceId('Microsoft.Network/networkInterfaces', concat('Zoo-', add(1, copyIndex()), '-ni'))]"
             ],
             "copy": {
                 "name": "ZooMachines",
@@ -245,21 +245,21 @@
                     "imageReference": { "publisher": "OpenLogic", "offer": "CentOS", "sku": "7.7", "version": "latest" },
                     "osDisk": {
                         "osType": "Linux",
-                        "name": "[concat('Zoo', copyIndex(), '-disk')]",
+                        "name": "[concat('Zoo-', add(1, copyIndex()), '-disk')]",
                         "createOption": "FromImage",
                         "managedDisk": { "storageAccountType": "Premium_LRS" },
                         "diskSizeGB": 31
                     }
                 },
                 "osProfile": {
-                    "computerName": "[concat('Zoo', copyIndex())]",
+                    "computerName": "[concat('Zoo-', add(1, copyIndex()))]",
                     "adminUsername": "[parameters('Resource_Group_Admin')]",
                     "adminPassword": "[parameters('Resource_Group_Password')]"
                 },
                 "networkProfile": {
                     "networkInterfaces": [
                         {
-                            "id": "[resourceId('Microsoft.Network/networkInterfaces', concat('Zoo', copyIndex(), '-ni'))]"
+                            "id": "[resourceId('Microsoft.Network/networkInterfaces', concat('Zoo-', add(1, copyIndex()), '-ni'))]"
                         }
                     ]
                 }
@@ -267,11 +267,11 @@
             "resources": [
                 {
                     "type": "extensions",
-                    "name": "[concat('Zoo', copyIndex(), '-script')]",
+                    "name": "[concat('Zoo-', add(1, copyIndex()), '-script')]",
                     "apiVersion": "2019-07-01",
                     "location": "[variables('location')]",
                     "dependsOn": [
-                        "[resourceId('Microsoft.Compute/virtualMachines/', concat('Zoo', copyIndex()))]"
+                        "[resourceId('Microsoft.Compute/virtualMachines/', concat('Zoo-', add(1, copyIndex())))]"
                     ],
                     "properties": {
                         "publisher": "Microsoft.Azure.Extensions",
@@ -292,10 +292,10 @@
         {
             "type": "Microsoft.Compute/virtualMachines",
             "apiVersion": "2019-07-01",
-            "name": "[concat('Kafka', copyIndex())]",
+            "name": "[concat('Kafka-', add(1, copyIndex()))]",
             "location": "[variables('location')]",
             "dependsOn": [
-                "[resourceId('Microsoft.Network/networkInterfaces', concat('Kafka', copyIndex(), '-ni'))]"
+                "[resourceId('Microsoft.Network/networkInterfaces', concat('Kafka-', add(1, copyIndex()), '-ni'))]"
             ],
             "copy": {
                 "name": "KafkaMachines",
@@ -315,7 +315,7 @@
                     },
                     "osDisk": {
                         "osType": "Linux",
-                        "name": "[concat('Kafka', copyIndex(), '-disk')]",
+                        "name": "[concat('Kafka-', add(1, copyIndex()), '-disk')]",
                         "createOption": "FromImage",
                         "managedDisk": {
                             "storageAccountType": "Premium_LRS"
@@ -324,14 +324,14 @@
                     }
                 },
                 "osProfile": {
-                    "computerName": "[concat('Kafka', copyIndex())]",
+                    "computerName": "[concat('Kafka-', add(1, copyIndex()))]",
                     "adminUsername": "[parameters('Resource_Group_Admin')]",
                     "adminPassword": "[parameters('Resource_Group_Password')]"
                 },
                 "networkProfile": {
                     "networkInterfaces": [
                         {
-                            "id": "[resourceId('Microsoft.Network/networkInterfaces', concat('Kafka', copyIndex(), '-ni'))]"
+                            "id": "[resourceId('Microsoft.Network/networkInterfaces', concat('Kafka-', add(1, copyIndex()), '-ni'))]"
                         }
                     ]
                 }
@@ -339,11 +339,11 @@
             "resources": [
                 {
                     "type": "extensions",
-                    "name": "[concat('Zoo', copyIndex(), '-script')]",
+                    "name": "[concat('Kafka-', add(1, copyIndex()), '-script')]",
                     "apiVersion": "2019-07-01",
                     "location": "[variables('location')]",
                     "dependsOn": [
-                        "[resourceId('Microsoft.Compute/virtualMachines/', concat('Zoo', copyIndex()))]"
+                        "[resourceId('Microsoft.Compute/virtualMachines/', concat('Kafka-', add(1, copyIndex())))]"
                     ],
                     "properties": {
                         "publisher": "Microsoft.Azure.Extensions",
