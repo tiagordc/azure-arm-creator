@@ -10,4 +10,4 @@ tar -xzf kafka_2.12-2.0.0.tgz
 rm -f kafka_2.12-2.0.0.tgz 
 
 echo 'export PATH=$PATH:$HOME/kafka_2.12-2.0.0/bin' >>~/.bash_profile
-echo "$1 $2" >~/parameters.txt
+echo "$1" >~/parameters.txt

@@ -352,7 +352,7 @@
                         "autoUpgradeMinorVersion": true,
                         "settings": { },
                         "protectedSettings": {
-                            "commandToExecute": "[concat('sh Kafka.sh ', copyIndex(), ' ', split(string(add(mod(copyIndex(),3),1)), ','))]",
+                            "commandToExecute": "[concat('sudo sh Kafka.sh ', string(copyIndex()))]",
                             "fileUris": [
                                 "https://raw.githubusercontent.com/tiagordc/azure-arm-creator/master/azure/Kafka/Kafka.sh"
                             ]  
