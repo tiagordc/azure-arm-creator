@@ -1,12 +1,14 @@
 #!/bin/bash
 
+su $1
+
 cd $HOME
 
-VM_INDEX=$1
-AVAILABILITY_ZONE=$2
-ZOOKEEPER_INSTANCES=$3
-KAFKA_INSTANCES=$4
-IP_PREFIX=$5
+VM_INDEX=$2
+AVAILABILITY_ZONE=$3
+ZOOKEEPER_INSTANCES=$4
+KAFKA_INSTANCES=$5
+IP_PREFIX=$6
 
 sudo yum -y install java-1.8.0-openjdk
 sudo yum -y install wget
