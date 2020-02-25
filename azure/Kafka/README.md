@@ -5,6 +5,9 @@ Dynamic Kafka cluster setup with Zookeeper Ensemble.
 
 Azure Bastion for remote management.
 
+# Test setup
+
+
 # Resources
 
 ARM QuickStart Templates:
