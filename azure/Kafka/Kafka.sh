@@ -1,8 +1,7 @@
 #!/bin/bash
 
 su $1
-
-cd $HOME
+cd /home/$1
 
 VM_INDEX=$2
 AVAILABILITY_ZONE=$3
@@ -10,7 +9,7 @@ ZOOKEEPER_INSTANCES=$4
 KAFKA_INSTANCES=$5
 IP_PREFIX=$6
 
-PROPS="$HOME/kafka_2.12-2.0.0/config/server.properties"
+PROPS="/home/$1/kafka_2.12-2.0.0/config/server.properties"
 
 sudo yum -y install java-1.8.0-openjdk
 sudo yum -y install wget
@@ -19,7 +18,7 @@ wget https://archive.apache.org/dist/kafka/2.0.0/kafka_2.12-2.0.0.tgz
 tar -xzf kafka_2.12-2.0.0.tgz
 rm -f kafka_2.12-2.0.0.tgz 
 
-echo 'export PATH=$PATH:$HOME/kafka_2.12-2.0.0/bin' >>~/.bash_profile
+echo 'export PATH=$PATH:/home/$1/kafka_2.12-2.0.0/bin' >>~/.bash_profile
 sed -r -i "s/(broker.id)=(.*)/\1=${VM_INDEX}/g" $PROPS
 
 LINE_NUMBER=`grep -nr 'broker.id=' $PROPS | cut -d : -f 1`
@@ -43,7 +42,7 @@ do
 done
 sed -r -i "s/(zookeeper.connect)=(.*)/\1=${ZOOKEEPER}/g" $PROPS
 
-echo "$HOME/kafka_2.12-2.0.0/bin/kafka-server-start.sh $PROPS> /dev/null 2>&1 &" >>/etc/rc.d/rc.local
+echo "/home/$1/kafka_2.12-2.0.0/bin/kafka-server-start.sh $PROPS> /dev/null 2>&1 &" >>/etc/rc.d/rc.local
 
 sudo chmod +x /etc/rc.d/rc.local
 sudo systemctl enable rc-local

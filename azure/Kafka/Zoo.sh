@@ -1,8 +1,7 @@
 #!/bin/bash
 
 su $1
-
-cd $HOME
+cd /home/$1
 
 VM_INDEX=$2
 AVAILABILITY_ZONE=$3
@@ -17,8 +16,8 @@ wget https://archive.apache.org/dist/kafka/2.0.0/kafka_2.12-2.0.0.tgz
 tar -xzf kafka_2.12-2.0.0.tgz
 rm -f kafka_2.12-2.0.0.tgz 
 
-echo 'export PATH=$PATH:$HOME/kafka_2.12-2.0.0/bin' >>~/.bash_profile
-echo "$HOME/kafka_2.12-2.0.0/bin/zookeeper-server-start.sh $HOME/kafka_2.12-2.0.0/config/zookeeper.properties> /dev/null 2>&1 &" >>/etc/rc.d/rc.local
+echo 'export PATH=$PATH:/home/$1/kafka_2.12-2.0.0/bin' >>~/.bash_profile
+echo "/home/$1/kafka_2.12-2.0.0/bin/zookeeper-server-start.sh /home/$1/kafka_2.12-2.0.0/config/zookeeper.properties> /dev/null 2>&1 &" >>/etc/rc.d/rc.local
 
 sudo chmod +x /etc/rc.d/rc.local
 sudo systemctl enable rc-local
