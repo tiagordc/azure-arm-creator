@@ -1,0 +1,365 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "Resource_Group_Name": {
+            "parameterOrder": 1,
+            "type": "string",
+            "defaultValue": "Kafka"
+        },
+        "Resource_Group_Admin": {
+            "parameterOrder": 2,
+            "type": "string",
+            "defaultValue": "KafkaAdmin"
+        },
+        "Resource_Group_Password": {
+            "parameterOrder": 3,
+            "type": "securestring",
+            "defaultValue": ""
+        },
+        "Address_Prefix": {
+            "parameterOrder": 4,
+            "type": "string",
+            "defaultValue": "10.0.0.0/16",
+            "metadata": {
+                "description": "The network address space for the virtual network"
+            }
+        },
+        "VMs_Subnet": {
+            "parameterOrder": 5,
+            "type": "string",
+            "defaultValue": "10.0.0.0/24",
+            "metadata": {
+                "description": "Address space for the virtual network subnet (netmask 24)"
+            }
+        },
+        "Bastion_Subnet": {
+            "parameterOrder": 6,
+            "type": "string",
+            "defaultValue": "10.0.1.0/24",
+            "metadata": {
+                "description": "Address space for Azure Bastion"
+            }
+        },
+        "Zookeeper_Instances": {
+            "parameterOrder": 7,
+            "type": "int",
+            "defaultValue": 1,
+            "metadata": {
+                "description": "Number of Apache ZooKeeper service instances"
+            }
+        },
+        "Kafka_Instances": {
+            "parameterOrder": 8,
+            "type": "int",
+            "defaultValue": 3,
+            "metadata": {
+                "description": "Number of Apache Kafka broker instances"
+            }
+        },
+        "Server_URL": {
+            "type": "string",
+            "defaultValue": ""
+        }
+    },
+    "variables": {
+        "location": "[resourceGroup().location]",
+        "ip_prefix": "[substring(parameters('VMs_Subnet'), 0, add(1, lastIndexOf(parameters('VMs_Subnet'), '.')))]"
+    },
+    "resources": [
+        {
+            "type": "Microsoft.Network/publicIPAddresses",
+            "apiVersion": "2019-11-01",
+            "name": "bastion-ip",
+            "location": "[variables('location')]",
+            "sku": { "name": "Standard" },
+            "properties": {
+                "publicIPAddressVersion": "IPv4",
+                "publicIPAllocationMethod": "Static"
+            }
+        },
+        {
+            "type": "Microsoft.Network/virtualNetworks",
+            "apiVersion": "2019-11-01",
+            "name": "vnet",
+            "location": "[variables('location')]",
+            "properties": {
+                "addressSpace": {
+                    "addressPrefixes": [
+                        "[parameters('Address_Prefix')]"
+                    ]
+                },
+                "subnets": [
+                    {
+                        "name": "VirtualMachinesSubnet",
+                        "properties": {
+                            "addressPrefix": "[parameters('VMs_Subnet')]"
+                        }
+                    },
+                    {
+                        "name": "AzureBastionSubnet",
+                        "properties": {
+                            "addressPrefix": "[parameters('Bastion_Subnet')]"
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "type": "Microsoft.Network/virtualNetworks/subnets",
+            "apiVersion": "2019-11-01",
+            "name": "vnet/VirtualMachinesSubnet",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/virtualNetworks', 'vnet')]"
+            ],
+            "properties": {
+                "addressPrefix": "[parameters('VMs_Subnet')]"
+            }
+        },
+        {
+            "type": "Microsoft.Network/virtualNetworks/subnets",
+            "apiVersion": "2019-11-01",
+            "name": "vnet/AzureBastionSubnet",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/virtualNetworks', 'vnet')]"
+            ],
+            "properties": {
+                "addressPrefix": "[parameters('Bastion_Subnet')]"
+            }
+        },
+        {
+            "type": "Microsoft.Network/networkSecurityGroups",
+            "apiVersion": "2019-11-01",
+            "name": "nsg",
+            "location": "[variables('location')]",
+            "properties": {
+                "securityRules": [
+                    {
+                        "name": "SSH",
+                        "properties": { "protocol": "TCP", "sourcePortRange": "*", "destinationPortRange": "22", "sourceAddressPrefix": "*", "destinationAddressPrefix": "*", "access": "Allow", "priority": 300, "direction": "Inbound" }
+                    }
+                ]
+            }
+        },
+        {
+            "type": "Microsoft.Network/bastionHosts",
+            "apiVersion": "2019-11-01",
+            "name": "bastion",
+            "location": "[variables('location')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/publicIPAddresses', 'bastion-ip')]",
+                "[resourceId('Microsoft.Network/virtualNetworks', 'vnet')]"
+            ],
+            "properties": {
+                "ipConfigurations": [
+                    {
+                        "name": "ipconfig",
+                        "properties": {
+                            "publicIPAddress": {
+                                "id": "[resourceId('Microsoft.Network/publicIPAddresses', 'bastion-ip')]"
+                            },
+                            "subnet": {
+                                "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', 'vnet', 'AzureBastionSubnet')]"
+                            }
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "type": "Microsoft.Network/networkInterfaces",
+            "apiVersion": "2019-11-01",
+            "name": "[concat('Zoo-', add(1, copyIndex()), '-ni')]",
+            "location": "[variables('location')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/networkSecurityGroups', 'nsg')]",
+                "[resourceId('Microsoft.Network/virtualNetworks', 'vnet')]"
+            ],
+            "copy": {
+                "name": "ZooInterfaces",
+                "count": "[parameters('Zookeeper_Instances')]"
+            },
+            "properties": {
+                "ipConfigurations": [
+                    {
+                        "name": "ipconfig",
+                        "properties": {
+                            "privateIPAddressVersion": "IPv4",
+                            "privateIPAddress": "[concat(variables('ip_prefix'), add(10, copyIndex()))]",
+                            "privateIPAllocationMethod": "Static",
+                            "subnet": { "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', 'vnet', 'VirtualMachinesSubnet')]" }
+                        }
+                    }
+                ],
+                "networkSecurityGroup": {
+                    "id": "[resourceId('Microsoft.Network/networkSecurityGroups', 'nsg')]"
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Network/networkInterfaces",
+            "apiVersion": "2019-11-01",
+            "name": "[concat('Kafka-', add(1, copyIndex()), '-ni')]",
+            "location": "[variables('location')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/networkSecurityGroups', 'nsg')]",
+                "[resourceId('Microsoft.Network/virtualNetworks', 'vnet')]"
+            ],
+            "copy": {
+                "name": "KafkaInterfaces",
+                "count": "[parameters('Kafka_Instances')]"
+            },
+            "properties": {
+                "ipConfigurations": [
+                    {
+                        "name": "ipconfig",
+                        "properties": {
+                            "privateIPAddressVersion": "IPv4",
+                            "privateIPAddress": "[concat(variables('ip_prefix'), add(copyIndex(), add(10, parameters('Zookeeper_Instances'))))]",
+                            "privateIPAllocationMethod": "Static",
+                            "subnet": { "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', 'vnet', 'VirtualMachinesSubnet')]" }
+                        }
+                    }
+                ],
+                "networkSecurityGroup": {
+                    "id": "[resourceId('Microsoft.Network/networkSecurityGroups', 'nsg')]"
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Compute/virtualMachines",
+            "apiVersion": "2019-07-01",
+            "name": "[concat('Zoo-', add(1, copyIndex()))]",
+            "location": "[variables('location')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/networkInterfaces', concat('Zoo-', add(1, copyIndex()), '-ni'))]"
+            ],
+            "copy": {
+                "name": "ZooMachines",
+                "count": "[parameters('Zookeeper_Instances')]"
+            },
+            "zones": "[split(string(add(mod(copyIndex(),2),1)), ',')]",
+            "properties": {
+                "hardwareProfile": { "vmSize": "Standard_B1ms" },
+                "storageProfile": {
+                    "imageReference": { "publisher": "OpenLogic", "offer": "CentOS", "sku": "7.7", "version": "latest" },
+                    "osDisk": {
+                        "osType": "Linux",
+                        "name": "[concat('Zoo-', add(1, copyIndex()), '-disk')]",
+                        "createOption": "FromImage",
+                        "managedDisk": { "storageAccountType": "Premium_LRS" },
+                        "diskSizeGB": 31
+                    }
+                },
+                "osProfile": {
+                    "computerName": "[concat('Zoo-', add(1, copyIndex()))]",
+                    "adminUsername": "[parameters('Resource_Group_Admin')]",
+                    "adminPassword": "[parameters('Resource_Group_Password')]"
+                },
+                "networkProfile": {
+                    "networkInterfaces": [
+                        {
+                            "id": "[resourceId('Microsoft.Network/networkInterfaces', concat('Zoo-', add(1, copyIndex()), '-ni'))]"
+                        }
+                    ]
+                }
+            },
+            "resources": [
+                {
+                    "type": "extensions",
+                    "name": "[concat('Zoo-', add(1, copyIndex()), '-script')]",
+                    "apiVersion": "2019-07-01",
+                    "location": "[variables('location')]",
+                    "dependsOn": [
+                        "[resourceId('Microsoft.Compute/virtualMachines/', concat('Zoo-', add(1, copyIndex())))]"
+                    ],
+                    "properties": {
+                        "publisher": "Microsoft.Azure.Extensions",
+                        "type": "CustomScript",
+                        "typeHandlerVersion": "2.1",
+                        "autoUpgradeMinorVersion": true,
+                        "settings": { },
+                        "protectedSettings": {
+                            "commandToExecute": "[concat('sh Zoo.sh \"', parameters('Resource_Group_Admin'), '\" ', copyIndex(), ' ', add(mod(copyIndex(),2),1), ' ',  parameters('Zookeeper_Instances'), ' ', parameters('Kafka_Instances'), ' \"', variables('ip_prefix'), '\"')]",
+                            "fileUris": [
+                                "https://raw.githubusercontent.com/tiagordc/azure-arm-creator/master/azure/Kafka/Zoo.sh"
+                            ]  
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "type": "Microsoft.Compute/virtualMachines",
+            "apiVersion": "2019-07-01",
+            "name": "[concat('Kafka-', add(1, copyIndex()))]",
+            "location": "[variables('location')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/networkInterfaces', concat('Kafka-', add(1, copyIndex()), '-ni'))]"
+            ],
+            "copy": {
+                "name": "KafkaMachines",
+                "count": "[parameters('Kafka_Instances')]"
+            },
+            "zones": "[split(string(add(mod(copyIndex(),2),1)), ',')]",
+            "properties": {
+                "hardwareProfile": {
+                    "vmSize": "Standard_B1ms"
+                },
+                "storageProfile": {
+                    "imageReference": {
+                        "publisher": "OpenLogic",
+                        "offer": "CentOS",
+                        "sku": "7.7",
+                        "version": "latest"
+                    },
+                    "osDisk": {
+                        "osType": "Linux",
+                        "name": "[concat('Kafka-', add(1, copyIndex()), '-disk')]",
+                        "createOption": "FromImage",
+                        "managedDisk": {
+                            "storageAccountType": "Premium_LRS"
+                        },
+                        "diskSizeGB": 31
+                    }
+                },
+                "osProfile": {
+                    "computerName": "[concat('Kafka-', add(1, copyIndex()))]",
+                    "adminUsername": "[parameters('Resource_Group_Admin')]",
+                    "adminPassword": "[parameters('Resource_Group_Password')]"
+                },
+                "networkProfile": {
+                    "networkInterfaces": [
+                        {
+                            "id": "[resourceId('Microsoft.Network/networkInterfaces', concat('Kafka-', add(1, copyIndex()), '-ni'))]"
+                        }
+                    ]
+                }
+            },
+            "resources": [
+                {
+                    "type": "extensions",
+                    "name": "[concat('Kafka-', add(1, copyIndex()), '-script')]",
+                    "apiVersion": "2019-07-01",
+                    "location": "[variables('location')]",
+                    "dependsOn": [
+                        "[resourceId('Microsoft.Compute/virtualMachines/', concat('Kafka-', add(1, copyIndex())))]"
+                    ],
+                    "properties": {
+                        "publisher": "Microsoft.Azure.Extensions",
+                        "type": "CustomScript",
+                        "typeHandlerVersion": "2.1",
+                        "autoUpgradeMinorVersion": true,
+                        "settings": { },
+                        "protectedSettings": {
+                            "commandToExecute": "[concat('sh Kafka.sh \"', parameters('Resource_Group_Admin'), '\" ', copyIndex(), ' ', add(mod(copyIndex(),2),1), ' ',  parameters('Zookeeper_Instances'), ' ', parameters('Kafka_Instances'), ' \"', variables('ip_prefix'), '\"')]",
+                            "fileUris": [
+                                "https://raw.githubusercontent.com/tiagordc/azure-arm-creator/master/azure/Kafka/Kafka.sh"
+                            ]  
+                        }
+                    }
+                }
+            ]
+        }
+    ]
+}
