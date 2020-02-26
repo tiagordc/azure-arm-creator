@@ -24,3 +24,5 @@ https://docs.microsoft.com/en-us/azure/virtual-machines/extensions/custom-script
 
 Shell Scripts Reference:
 http://linuxcommand.org/lc3_writing_shell_scripts.php#contents
+
+https://www.digitalocean.com/community/tutorials/how-to-install-apache-kafka-on-centos-7

@@ -240,7 +240,7 @@
             },
             "zones": "[split(string(add(mod(copyIndex(),2),1)), ',')]",
             "properties": {
-                "hardwareProfile": { "vmSize": "Standard_B1s" },
+                "hardwareProfile": { "vmSize": "Standard_B1ms" },
                 "storageProfile": {
                     "imageReference": { "publisher": "OpenLogic", "offer": "CentOS", "sku": "7.7", "version": "latest" },
                     "osDisk": {
@@ -304,7 +304,7 @@
             "zones": "[split(string(add(mod(copyIndex(),2),1)), ',')]",
             "properties": {
                 "hardwareProfile": {
-                    "vmSize": "Standard_B1s"
+                    "vmSize": "Standard_B1ms"
                 },
                 "storageProfile": {
                     "imageReference": {
