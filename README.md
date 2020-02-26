@@ -1,24 +1,19 @@
-# Azure Resource Creator
+# Azure Sandbox Creator
 
-A simple website to create Azure resources (based on hidden ARM templates) that don't require any technical knowledge.
+A simple tool to create Azure resources (based on ARM templates) that may or may not require technical knowledge
 
 ![preview](https://raw.githubusercontent.com/tiagordc/azure-arm-creator/master/static/images/preview1.png)
 
-Use this tool to:
+Possible scenarios:
    * Spin up your devops environments and deallocate them when not in use
-   * Allow users to create software demos and provide a dedicated portal to magage resources
-   * Extend your iPad capabilities
+   * Create software demos and provide a dedicated portal to magage those resources
+   * Extend your iPad capabilities with a cheap VM on the cloud
+
+The examples provided are just a subset of templates I needed at some point in time for a specific reason. Don't use them as an architecture reference.
 
 ## Setup
 
-Just do the  environment configuration with [azure authentication](https://docs.microsoft.com/en-us/azure/azure-resource-manager/resource-group-create-service-principal-portal#get-application-id-and-authentication-key)
-
- ### ARM references
-
- * [Functions](https://docs.microsoft.com/en-us/azure/azure-resource-manager/templates/template-functions)
- * [Unique Names](https://www.codeisahighway.com/use-uniquestring-function-to-generate-unique-names-for-resources-in-arm-template/)
- * [SSH Password](https://github.com/Azure/azure-quickstart-templates/blob/master/101-hdinsight-linux-ssh-password/azuredeploy.json)
- * [Secrets](https://devkimchi.com/2019/04/24/6-ways-passing-secrets-to-arm-templates/)
+Start by doing the environment configuration with the required [authentication data](https://docs.microsoft.com/en-us/azure/azure-resource-manager/resource-group-create-service-principal-portal#get-application-id-and-authentication-key)
 
 ### Run on Linux
 
@@ -38,3 +33,9 @@ flask run
 
 ### Run on an iPad
 
+## References
+
+* [Functions](https://docs.microsoft.com/en-us/azure/azure-resource-manager/templates/template-functions)
+* [Unique Names](https://www.codeisahighway.com/use-uniquestring-function-to-generate-unique-names-for-resources-in-arm-template/)
+* [SSH Password](https://github.com/Azure/azure-quickstart-templates/blob/master/101-hdinsight-linux-ssh-password/azuredeploy.json)
+* [Secrets](https://devkimchi.com/2019/04/24/6-ways-passing-secrets-to-arm-templates/)

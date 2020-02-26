@@ -1,4 +1,3 @@
-
 # Kafka cluster with Bastion
 
 Dynamic Kafka cluster setup with Zookeeper Ensemble.
