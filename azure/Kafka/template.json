@@ -280,7 +280,7 @@
                         "autoUpgradeMinorVersion": true,
                         "settings": { },
                         "protectedSettings": {
-                            "commandToExecute": "[concat('sudo sh Zoo.sh \"', parameters('Resource_Group_Admin'), '\" ', copyIndex(), ' ', add(mod(copyIndex(),2),1), ' ',  parameters('Zookeeper_Instances'), ' ', parameters('Kafka_Instances'), ' \"', variables('ip_prefix'), '\"')]",
+                            "commandToExecute": "[concat('sh Zoo.sh \"', parameters('Resource_Group_Admin'), '\" ', copyIndex(), ' ', add(mod(copyIndex(),2),1), ' ',  parameters('Zookeeper_Instances'), ' ', parameters('Kafka_Instances'), ' \"', variables('ip_prefix'), '\"')]",
                             "fileUris": [
                                 "https://raw.githubusercontent.com/tiagordc/azure-arm-creator/master/azure/Kafka/Zoo.sh"
                             ]  
@@ -352,7 +352,7 @@
                         "autoUpgradeMinorVersion": true,
                         "settings": { },
                         "protectedSettings": {
-                            "commandToExecute": "[concat('sudo sh Kafka.sh \"', parameters('Resource_Group_Admin'), '\" ', copyIndex(), ' ', add(mod(copyIndex(),2),1), ' ',  parameters('Zookeeper_Instances'), ' ', parameters('Kafka_Instances'), ' \"', variables('ip_prefix'), '\"')]",
+                            "commandToExecute": "[concat('sh Kafka.sh \"', parameters('Resource_Group_Admin'), '\" ', copyIndex(), ' ', add(mod(copyIndex(),2),1), ' ',  parameters('Zookeeper_Instances'), ' ', parameters('Kafka_Instances'), ' \"', variables('ip_prefix'), '\"')]",
                             "fileUris": [
                                 "https://raw.githubusercontent.com/tiagordc/azure-arm-creator/master/azure/Kafka/Kafka.sh"
                             ]  
