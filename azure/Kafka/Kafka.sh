@@ -10,15 +10,16 @@ IP_PREFIX=$6
 yum -y install java-1.8.0-openjdk
 yum -y install wget
 
-cd /usr/local
+mkdir -p /var/lib/kafka
+cd /var/lib/kafka
 
 wget https://archive.apache.org/dist/kafka/2.0.0/kafka_2.12-2.0.0.tgz
-tar -xzf kafka_2.12-2.0.0.tgz
+tar --strip-components=1 -xzf kafka_2.12-2.0.0.tgz
 rm -f kafka_2.12-2.0.0.tgz 
 
-echo 'export PATH=$PATH:/usr/local/kafka_2.12-2.0.0/bin' >>~/.bash_profile
+echo 'export PATH=$PATH:/var/lib/kafka/bin' >>~/.bash_profile
 
-cd kafka_2.12-2.0.0/config
+cd config
 
 sed -r -i "s/(broker.id)=(.*)/\1=${VM_INDEX}/g" server.properties
 LINE_NUMBER=`grep -nr 'broker.id=' server.properties | cut -d : -f 1`
@@ -42,7 +43,7 @@ do
 done
 sed -r -i "s/(zookeeper.connect)=(.*)/\1=${ZOOKEEPER}/g" server.properties
 
-echo "/usr/local/kafka_2.12-2.0.0/bin/kafka-server-start.sh /usr/local/kafka_2.12-2.0.0/config/server.properties> /dev/null 2>&1 &" >>/etc/rc.d/rc.local
+echo "/var/lib/kafka/bin/kafka-server-start.sh /var/lib/kafka/config/server.properties> /dev/null 2>&1 &" >>/etc/rc.d/rc.local
 
 chmod +x /etc/rc.d/rc.local
 systemctl enable rc-local
