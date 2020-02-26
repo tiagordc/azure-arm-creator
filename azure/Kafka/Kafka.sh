@@ -7,20 +7,19 @@ ZOOKEEPER_INSTANCES=$4
 KAFKA_INSTANCES=$5
 IP_PREFIX=$6
 
+# Install dependencies
 yum -y install java-1.8.0-openjdk
 yum -y install wget
 
+# Download Kafka
 mkdir -p /var/lib/kafka
 cd /var/lib/kafka
-
 wget https://archive.apache.org/dist/kafka/2.0.0/kafka_2.12-2.0.0.tgz
-tar --strip-components=1 -xzf kafka_2.12-2.0.0.tgz
+tar -xzf kafka_2.12-2.0.0.tgz --strip 1
 rm -f kafka_2.12-2.0.0.tgz 
-
-echo 'export PATH=$PATH:/var/lib/kafka/bin' >>~/.bash_profile
-
 cd config
 
+# Kafka configuration
 sed -r -i "s/(broker.id)=(.*)/\1=${VM_INDEX}/g" server.properties
 LINE_NUMBER=`grep -nr 'broker.id=' server.properties | cut -d : -f 1`
 LINE_NUMBER=$(( $LINE_NUMBER + 1 ))
@@ -43,8 +42,8 @@ do
 done
 sed -r -i "s/(zookeeper.connect)=(.*)/\1=${ZOOKEEPER}/g" server.properties
 
+# Run
 echo "/var/lib/kafka/bin/kafka-server-start.sh /var/lib/kafka/config/server.properties> /dev/null 2>&1 &" >>/etc/rc.d/rc.local
-
 chmod +x /etc/rc.d/rc.local
 systemctl enable rc-local
 systemctl start rc-local
