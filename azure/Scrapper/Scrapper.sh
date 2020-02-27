@@ -1,0 +1,10 @@
+#!/bin/bash
+
+ORCHESTRATPR_IP=$1
+QUERY=$2
+LANGUAGE=$3
+MODEL_ADDRESS=$4
+VM_INDEX=$5
+INSTANCES=$6
+
+echo 'Hello'
