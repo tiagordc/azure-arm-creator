@@ -4,7 +4,7 @@ A simple tool to create Azure resources (based on ARM templates) that may or may
 
 ![preview](https://raw.githubusercontent.com/tiagordc/azure-arm-creator/master/static/images/preview1.png)
 
-Possible scenarios:
+Possible use cases:
    * Spin up your devops environments and deallocate them when not in use
    * Create software demos and provide a dedicated portal to magage those resources
    * Extend your iPad capabilities with a cheap VM on the cloud

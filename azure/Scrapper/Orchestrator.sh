@@ -44,4 +44,4 @@ git clone https://github.com/tiagordc/web-image-scrapper.git .
 npm install --unsafe-perm=true --allow-root
 
 # Run
-node /var/lib/scrapper/index.js -o localhost -q dog,cat -m model --seed
+# node /var/lib/scrapper/index.js -o localhost -q $QUERY -l $LANGUAGE -m $MODEL_ADDRESS --seed

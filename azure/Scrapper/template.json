@@ -121,7 +121,7 @@
             "sku": { "name": "Standard" },
             "properties": {
                 "publicIPAddressVersion": "IPv4",
-                "publicIPAllocationMethod": "Dynamic"
+                "publicIPAllocationMethod": "Static"
             }
         },
         {
@@ -163,7 +163,7 @@
                 "[resourceId('Microsoft.Network/networkInterfaces', 'orchestrator-ni')]"
             ],
             "properties": {
-                "hardwareProfile": { "vmSize": "Standard_B2s" },
+                "hardwareProfile": { "vmSize": "Standard_B2ms" },
                 "storageProfile": {
                     "imageReference": { "publisher": "credativ", "offer": "Debian", "sku": "9-backports", "version": "latest" },
                     "osDisk": {
@@ -171,7 +171,7 @@
                         "name": "orchestrator-disk",
                         "createOption": "FromImage",
                         "managedDisk": { "storageAccountType": "Premium_LRS" },
-                        "diskSizeGB": 100
+                        "diskSizeGB": 200
                     }
                 },
                 "osProfile": {
@@ -255,7 +255,7 @@
                 "count": "[parameters('Number_of_Instances')]"
             },
             "properties": {
-                "hardwareProfile": { "vmSize": "Standard_B1s" },
+                "hardwareProfile": { "vmSize": "Standard_A2_v2" },
                 "storageProfile": {
                     "imageReference": { "publisher": "credativ", "offer": "Debian", "sku": "9-backports", "version": "latest" },
                     "osDisk": {
@@ -277,7 +277,10 @@
                             "id": "[resourceId('Microsoft.Network/networkInterfaces', concat('scrapper-', add(1, copyIndex()), '-ni'))]"
                         }
                     ]
-                }
+                },
+                "priority": "Spot",
+                "evictionPolicy": "Deallocate",
+                "billingProfile": { "maxPrice": -1 }
             },
             "resources": [
                 {
