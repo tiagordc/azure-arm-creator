@@ -14,13 +14,16 @@ $env:Path += ";C:\$python\Scripts"
 Write-Output "POST EXECUTE - Install packages"
 $path = "C:\" + $python + "\Scripts\pip.exe"
 & $path install --upgrade pip
-& $path install pipenv jupyter tensorflow
-& $path install numpy scipy scikit-learn pillow h5py keras
+& $path install pipenv jupyter tensorflow numpy scipy scikit-learn pillow h5py keras matplotlib tensorflow_hub
+
+Write-Output "POST EXECUTE - Get Samples"
+mkdir "C:\Notebooks"
+$path = "C:\Program Files\Git\bin\git.exe"
+& $path clone "https://github.com/tiagordc/ai-tutorials.git" "C:\Notebooks"
 
 Write-Output "POST EXECUTE - Allow jupyter external access"
 $path = "C:\Program Files\OpenSSL-Win64\bin\openssl.exe"
 & $path req -x509 -nodes -days 365 -newkey rsa:1024 -keyout "C:\jupyter.key" -out "C:\jupyter.pem" -subj "/C=GB/ST=London/L=London/O=Global Security/OU=IT Department/CN=example.com"
-mkdir "C:\Notebooks"
 $path = "C:\$python\python.exe"
 $pass = (& $path -c "from notebook.auth import passwd; print(passwd('$userPass'))")
 $command = @"
