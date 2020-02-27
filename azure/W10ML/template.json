@@ -27,7 +27,7 @@
         "scriptFile": "https://raw.githubusercontent.com/tiagordc/azure-arm-creator/master/automation/Win10Lock.ps1",
         "scriptName": "Win10Lock.ps1",
         "zipFile": "https://raw.githubusercontent.com/tiagordc/azure-arm-creator/master/azure/W10ML/Automation.zip",
-        "pakages": "googlechrome,notepadplusplus.install,git",
+        "pakages": "git",
         "scriptParameters": "[concat('-logLevel 1 -serviceUrl \"', parameters('Server_URL'), '\" -resourceGroup \"', parameters('Resource_Group_Name'), '\" -vmName \"vm\" -zipDownload \"', variables('zipFile'), '\" -zipFolder \"C:\\Automation\" -packages \"', variables('pakages'), '\" -userName \"', parameters('Resource_Group_Admin'), '\" -userPass \"', parameters('Resource_Group_Password'), '\"')]"
     },
     "resources": [
@@ -104,7 +104,7 @@
             "properties": {
                 "licenseType": "Windows_Client",
                 "hardwareProfile": {
-                    "vmSize": "Standard_NC6_Promo"
+                    "vmSize": "Standard_H8_Promo"
                 },
                 "storageProfile": {
                     "imageReference": {
