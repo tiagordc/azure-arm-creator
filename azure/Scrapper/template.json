@@ -255,7 +255,7 @@
                 "count": "[parameters('Number_of_Instances')]"
             },
             "properties": {
-                "hardwareProfile": { "vmSize": "Standard_A2_v2" },
+                "hardwareProfile": { "vmSize": "Standard_D2s_v3" },
                 "storageProfile": {
                     "imageReference": { "publisher": "credativ", "offer": "Debian", "sku": "9-backports", "version": "latest" },
                     "osDisk": {
@@ -263,7 +263,7 @@
                         "name": "[concat('scrapper-', add(1, copyIndex()), '-disk')]",
                         "createOption": "FromImage",
                         "managedDisk": { "storageAccountType": "Premium_LRS" },
-                        "diskSizeGB": 31
+                        "diskSizeGB": 30
                     }
                 },
                 "osProfile": {
@@ -279,8 +279,7 @@
                     ]
                 },
                 "priority": "Spot",
-                "evictionPolicy": "Deallocate",
-                "billingProfile": { "maxPrice": -1 }
+                "evictionPolicy": "Deallocate"
             },
             "resources": [
                 {
