@@ -9,7 +9,9 @@ Windows 10 with Machine Learning tools:
 
 # TODO
 
+    * Export PIP dependencies
     * GPU instance with CUDA 
 
 # Resources
 
+    * https://medium.com/@edkrueger_16881/virtual-environments-for-data-science-running-python-and-jupyter-with-pipenv-c6cb6c44a405
