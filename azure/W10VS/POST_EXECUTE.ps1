@@ -11,3 +11,11 @@ New-ItemProperty -Path $regkey -Name AllowDevelopmentWithoutDevLicense -Property
 
 # Install Linux Subsystem
 Enable-WindowsOptionalFeature -Online -NoRestart -FeatureName Microsoft-Windows-Subsystem-Linux
+
+$wshshell = New-Object -ComObject WScript.Shell
+
+if (Test-Path "C:\ProgramData\chocolatey\bin\FlaUInspect.exe") {
+    $lnk = $wshshell.CreateShortcut("C:\Users\Public\Desktop\FlaUInspect.lnk")
+    $lnk.TargetPath = "C:\ProgramData\chocolatey\bin\FlaUInspect.exe"
+    $lnk.Save()
+}
