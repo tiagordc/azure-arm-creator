@@ -5,12 +5,12 @@
         "Resource_Group_Name": {
             "parameterOrder": 1,
             "type": "string",
-            "defaultValue": ""
+            "defaultValue": "Visual Studio 2019"
         },
         "Resource_Group_Admin": {
             "parameterOrder": 2,
             "type": "string",
-            "defaultValue": ""
+            "defaultValue": "admin"
         },
         "Resource_Group_Password": {
             "parameterOrder": 3,
