@@ -1,6 +1,6 @@
 # Azure Sandbox Creator
 
-A simple tool to create Azure resources (based on ARM templates and Pulumi code) that may or may not require technical knowledge (shell, json, etc.)
+A simple tool to create Azure resources (based on ARM templates and Pulumi code) that may not require user technical knowledge (shell, json, etc.)
 
 ![preview](https://raw.githubusercontent.com/tiagordc/azure-arm-creator/master/static/images/preview1.png)
 
