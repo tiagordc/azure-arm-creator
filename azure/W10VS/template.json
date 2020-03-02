@@ -10,7 +10,7 @@
         "Resource_Group_Admin": {
             "parameterOrder": 2,
             "type": "string",
-            "defaultValue": "admin"
+            "defaultValue": "vsuser"
         },
         "Resource_Group_Password": {
             "parameterOrder": 3,
