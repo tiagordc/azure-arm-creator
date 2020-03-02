@@ -1,6 +1,6 @@
 # Azure Sandbox Creator
 
-A simple tool to create Azure resources (based on ARM templates) that may or may not require technical knowledge (shell, json, etc.)
+A simple tool to create Azure resources (based on ARM templates and Pulumi code) that may or may not require technical knowledge (shell, json, etc.)
 
 ![preview](https://raw.githubusercontent.com/tiagordc/azure-arm-creator/master/static/images/preview1.png)
 
@@ -8,6 +8,7 @@ Possible use cases:
    * Spin up your devops environments from your smartphone and deallocate them when not in use
    * Create software demos and provide a dedicated portal to magage those resources (VMs and NSGs)
    * Extend your iPad capabilities with a cheap VM on the cloud
+   * Learn about ARM templates and Pulumi
 
 The examples provided are just a subset of templates I needed at some point in time for a specific reason. Don't use them as an architecture reference.
 
