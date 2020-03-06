@@ -141,10 +141,13 @@ def machines(resource_group):
 		instance = compute_client.virtual_machines.instance_view(resource_group, vm.name)
 		vm_power = 'unknown'
 		power_state = [x.code[x.code.index('/')+1:] for x in instance.statuses if x.code.startswith('PowerState')]
-		if len(power_state) > 0:
-			vm_power = power_state[0] 
+		if len(power_state) > 0: vm_power = power_state[0] 
+		vm_os = 'unknown'
+		if vm.os_profile.windows_configuration: vm_os = 'windows'
+		if vm.os_profile.linux_configuration: vm_os = 'linux'
 		vm_private_ips = []
 		vm_public_ips = []
+		vm_access_ips = []
 		for nic in vm.network_profile.network_interfaces:
 			nic_id = re.search("/resourceGroups/([^/]+).*/networkInterfaces/([^/]+).*", nic.id, re.DOTALL)
 			nic_details = network_client.network_interfaces.get(nic_id.group(1), nic_id.group(2))
@@ -154,16 +157,20 @@ def machines(resource_group):
 				if ip.public_ip_address and ip.public_ip_address.id:
 					public_ip_id = re.search("/resourceGroups/([^/]+).*/publicIPAddresses/([^/]+).*", ip.public_ip_address.id, re.DOTALL)
 					public_ip = network_client.public_ip_addresses.get(public_ip_id.group(1), public_ip_id.group(2))
-					if public_ip.ip_address:
-						vm_public_ips.append(public_ip.ip_address)
-		if vm.os_profile and vm.os_profile.admin_username:
-			vm_admin = vm.os_profile.admin_username
-		vm_os = 'unknown'
-		if vm.os_profile.windows_configuration:
-			vm_os = 'windows'
-		if vm.os_profile.linux_configuration:
-			vm_os = 'linux'
-		result.append({ "name": vm.name, "status": vm_power, "public": vm_public_ips, "private": vm_private_ips, "admin": vm_admin, "tags": vm.tags, "os": vm_os })
+					if public_ip.ip_address: vm_public_ips.append(public_ip.ip_address)
+			if nic_details.network_security_group and nic_details.network_security_group.id:
+				nsg_id = re.search("/resourceGroups/([^/]+).*/networkSecurityGroups/([^/]+).*", nic_details.network_security_group.id, re.DOTALL)
+				nsg_details = network_client.network_security_groups.get(nsg_id.group(1), nsg_id.group(2))
+				if vm_os == 'windows': nsg_rules = [x for x in nsg_details.security_rules if x.destination_port_range == '3389']
+				if vm_os == 'linux': nsg_rules = [x for x in nsg_details.security_rules if x.destination_port_range == '22']
+				if nsg_rules and len(nsg_rules) == 1:
+					rule = nsg_rules[0]
+					if rule.source_address_prefix:
+						vm_access_ips.append(rule.source_address_prefix)
+					if rule.source_address_prefixes:
+						vm_access_ips.extend(rule.source_address_prefixes)
+		if vm.os_profile and vm.os_profile.admin_username: vm_admin = vm.os_profile.admin_username
+		result.append({ "name": vm.name, "status": vm_power, "public": vm_public_ips, "private": vm_private_ips, "admin": vm_admin, "tags": vm.tags, "os": vm_os, "access": vm_access_ips })
 	return jsonify(result)
 
 @app.route('/<resource_group>/<machine>/stop', methods=['POST'])
@@ -182,5 +189,31 @@ def vm_start(resource_group, machine):
 	async_vm_start.wait()
 	return '', 200
 
+@app.route('/<resource_group>/<machine>/secure', methods=['POST'])
+@auth_required(resource_client)
+def nsg_update(resource_group, machine):
+	ips = request.get_data(as_text=True)
+	vm = compute_client.virtual_machines.get(resource_group, machine)
+	if vm.os_profile.windows_configuration: vm_os = 'windows'
+	elif vm.os_profile.linux_configuration: vm_os = 'linux'
+	else: return '', 500
+	for nic in vm.network_profile.network_interfaces:
+		nic_id = re.search("/resourceGroups/([^/]+).*/networkInterfaces/([^/]+).*", nic.id, re.DOTALL)
+		nic_details = network_client.network_interfaces.get(nic_id.group(1), nic_id.group(2))
+		nsg_id = re.search("/resourceGroups/([^/]+).*/networkSecurityGroups/([^/]+).*", nic_details.network_security_group.id, re.DOTALL)
+		nsg_details = network_client.network_security_groups.get(nsg_id.group(1), nsg_id.group(2))
+		if vm_os == 'windows': nsg_rules = [x for x in nsg_details.security_rules if x.destination_port_range == '3389']
+		if vm_os == 'linux': nsg_rules = [x for x in nsg_details.security_rules if x.destination_port_range == '22']
+		if nsg_rules and len(nsg_rules) == 1:
+			rule = nsg_rules[0]
+			if (ips == '*'):
+				rule.source_address_prefix = '*'
+				rule.source_address_prefixes = None
+			else:
+				rule.source_address_prefix = None
+				rule.source_address_prefixes = ips.split(",")
+			network_client.security_rules.create_or_update(resource_group, nsg_details.name, rule.name, rule)
+	return '', 200
+	
 if __name__ == '__main__':
 	app.run()
