@@ -7,8 +7,9 @@ from azure.mgmt.compute import ComputeManagementClient
 from azure.mgmt.network import NetworkManagementClient
 from azure.mgmt.resource.resources.models import DeploymentMode
 from auth import admin_required, auth_required
-from utils import icon_for_template
+from utils import icon_for_template, template_name
 from base64 import b64encode
+from datetime import datetime
 
 app = Flask(__name__)
 
@@ -86,7 +87,7 @@ def deploy(template):
 	parameters = request.get_json()
 	parameters['Server_URL'] = request.url_root
 	group_name = parameters['Resource_Group_Name']
-	tags = { 'created-by': os.environ['ARM_CREATED_TAG'], 'display-name': group_name }
+	tags = { 'created-by': os.environ['ARM_CREATED_TAG'], 'display-name': group_name, 'arm-template': template_name(template_folder, template), 'created-on': datetime.now().strftime('%Y-%m-%d %H:%M:%S') }
 	prefix = os.environ['ARM_PREFIX']
 	group_name = prefix + re.sub(r"[^\w]", "", group_name)
 	if 'Resource_Group_Admin' in parameters and 'Resource_Group_Password' in parameters:

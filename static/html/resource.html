@@ -27,12 +27,17 @@
 
             {{#each machines}}
             <div class="card" data-index="{{@index}}">
-                <div class="card-header">{{header}}</div>
+                <div class="card-header"><b>{{header}}</b></div>
                 <div class="card-content card-content-padding">
                     {{#if description}}
                         <div>{{description}}</div>
                     {{/if}}
-                    {{#if showPublicIps}}
+                    {{#if publicIp}}
+                        <div style="padding-top: 10px;">
+                            Public IP: <a @click="howTo">{{publicIp}}</a>
+                        </div>
+                    {{/if}}
+                    {{#if publicIps}}
                         <div style="padding-top: 10px;">
                             Public IPs:
                             <ul>
@@ -42,7 +47,12 @@
                             </ul>
                         </div>
                     {{/if}}
-                    {{#if showPrivateIps}}
+                    {{#if privateIp}}
+                        <div style="padding-top: 10px;">
+                            Internal IP: {{privateIp}}
+                        </div>
+                    {{/if}}
+                    {{#if privateIps}}
                         <div style="padding-top: 10px;">
                             Internal IPs:
                             <ul>
@@ -52,9 +62,17 @@
                             </ul>
                         </div>
                     {{/if}}
+                    <div style="padding-top: 10px;">
+                        Access List:
+                        <div style="width: 100%; margin-top: 5px; display: table;"> 
+                            <input type="text" style="display: table-cell; width: 100%; border: 1px solid #ddd; height: 30px; padding: 0 10px;" value="{{nsg}}" >
+                            <i @click="getIp" class="f7-icons" style="display: table-cell; cursor: pointer; vertical-align: bottom; padding-left: 5px;" title="Get my IP">map_pin</i>
+                            <i @click="saveNsg" class="f7-icons" style="display: table-cell; cursor: pointer; vertical-align: bottom; padding-left: 5px;" title="Save">lock</i>
+                        </div>
+                    </div>
                 </div>
                 <div class="card-footer">
-                    <span></span>
+                    <button style="width: 150px;" class="col button button-fill color-gray" @click="restartVm">Restart</button>
                     <p class="segmented segmented-strong" style="width: 200px;">
                         <button class="{{stopClass}}" style="{{stopStyle}}" @click="stopVm">{{stopText}}</button>
                         <button class="{{startClass}}" style="{{startStyle}}" @click="startVm">{{startText}}</button>
@@ -122,6 +140,24 @@
                 self.$setState({ timer: timeout });
 
             },
+            restartVm: function (ev) {
+
+                var self = this;
+                clearTimeout(self.timer);
+
+                var app = self.$app;
+                var target = ev.currentTarget;
+                target.className += ' disabled';
+
+                var vmIndex = parseInt(target.closest('.card').attributes["data-index"].value);
+                var element = self.machines[vmIndex];
+
+                app.request.post('../' + self.name + '/' + element.name + '/restart');
+
+                var timeout = setTimeout(self.reload, 5000);
+                self.$setState({ timer: timeout });
+
+            },
             howTo: function (ev) {
 
                 var self = this;
@@ -177,8 +213,12 @@
                         element.isWorking = element.status !== 'running' && element.status.endsWith('ing');
                         element.header = element.tags && element.tags['arm-name'] ? element.tags['arm-name'] : element.name;
                         element.description = element.tags && element.tags['arm-description'] ? element.tags['arm-description'] : null;
-                        element.showPublicIps = element.isRunning && element.public && element.public instanceof Array && element.public.length > 0;
-                        element.showPrivateIps = element.isRunning && element.private && element.private instanceof Array && element.private.length > 0;
+                        element.publicIp = element.isRunning && element.public && element.public instanceof Array && element.public.length === 1 ? element.public[0] : null;
+                        element.publicIps = element.isRunning && element.public && element.public instanceof Array && element.public.length > 1;
+                        element.privateIp = element.isRunning && element.private && element.private instanceof Array && element.private.length === 1 ? element.private[0] : null;
+                        element.privateIps = element.isRunning && element.private && element.private instanceof Array && element.private.length > 1;
+                        element.admin = element.tags && element.tags['arm-user'] ? element.tags['arm-user'] : element.admin;
+                        element.nsg = element.access ? element.access.join(',') : '*';
 
                         if (element.isRunning) {
                             element.stopText = 'Stop';
@@ -209,6 +249,21 @@
                     self.$setState({ timer: timeout });
                 });
 
+            },
+            getIp: function(ev) {
+                var target = ev.currentTarget;
+                var input = target.previousElementSibling;
+                app.request.get('https://v4.ident.me/', null, function (data) {
+                    if (input.value === '*' || input.value == '') input.value = data;
+                    else if (input.value.indexOf(data) < 0) input.value += "," + data;
+                });
+            },
+            saveNsg: function(ev) {
+                var target = ev.currentTarget;
+                var vmIndex = parseInt(target.closest('.card').attributes["data-index"].value);
+                var element = this.machines[vmIndex];
+                var input = target.previousElementSibling.previousElementSibling;
+                app.request.post('../' + this.name + '/' + element.name + '/secure', input.value);
             }
         },
         on: {
