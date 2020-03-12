@@ -19,3 +19,8 @@ if (Test-Path "C:\ProgramData\chocolatey\bin\FlaUInspect.exe") {
     $lnk.TargetPath = "C:\ProgramData\chocolatey\bin\FlaUInspect.exe"
     $lnk.Save()
 }
+
+# Docker https://stackoverflow.com/a/50099965
+Enable-WindowsOptionalFeature -Online -FeatureName Microsoft-Hyper-V -All -Verbose
+Enable-WindowsOptionalFeature -Online -FeatureName Containers -All -Verbose
+bcdedit /set hypervisorlaunchtype Auto
