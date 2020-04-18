@@ -12,15 +12,23 @@ New-ItemProperty -Path $regkey -Name AllowDevelopmentWithoutDevLicense -Property
 # Install Linux Subsystem
 Enable-WindowsOptionalFeature -Online -NoRestart -FeatureName Microsoft-Windows-Subsystem-Linux
 
-$wshshell = New-Object -ComObject WScript.Shell
+# Install Docker https://stackoverflow.com/a/50099965
+Enable-WindowsOptionalFeature -Online -FeatureName Microsoft-Hyper-V -All -Verbose
+Enable-WindowsOptionalFeature -Online -FeatureName Containers -All -Verbose
+bcdedit /set hypervisorlaunchtype Auto
+choco install docker-desktop
 
+# Install Node.js
+choco install nodejs.install
+
+# CUSTOM
+choco install flauinspect # https://github.com/FlaUI/FlaUI
+choco install azure-functions-core-tools --params "'/x64'" # https://github.com/Azure/azure-functions-core-tools
+choco install azure-cli
+
+$wshshell = New-Object -ComObject WScript.Shell
 if (Test-Path "C:\ProgramData\chocolatey\bin\FlaUInspect.exe") {
     $lnk = $wshshell.CreateShortcut("C:\Users\Public\Desktop\FlaUInspect.lnk")
     $lnk.TargetPath = "C:\ProgramData\chocolatey\bin\FlaUInspect.exe"
     $lnk.Save()
 }
-
-# Docker https://stackoverflow.com/a/50099965
-Enable-WindowsOptionalFeature -Online -FeatureName Microsoft-Hyper-V -All -Verbose
-Enable-WindowsOptionalFeature -Online -FeatureName Containers -All -Verbose
-bcdedit /set hypervisorlaunchtype Auto
